@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2
+
+- Fixed `rwth-vpn remove` so it removes only the helper while leaving the CLI
+  installed.
+- Reject unexpected command arguments instead of silently ignoring them.
+
 ## 1.2.1
 
 - Fixed the standalone installer status message on POSIX shells.

@@ -20,11 +20,22 @@ enum RWTHVPNCLI {
 
         switch command {
         case "setup":
+            guard arguments.dropFirst().isEmpty else {
+                throw CLIError.message("Usage: rwth-vpn setup")
+            }
             try Helper.install()
             print("Helper installed. You can now run: rwth-vpn connect")
-        case "remove", "uninstall":
+        case "remove":
+            guard arguments.dropFirst().isEmpty else {
+                throw CLIError.message("Usage: rwth-vpn remove")
+            }
+            try removeHelper()
+        case "uninstall":
             try uninstall(arguments.dropFirst())
         case "status":
+            guard arguments.dropFirst().isEmpty else {
+                throw CLIError.message("Usage: rwth-vpn status")
+            }
             print("helper: \(Helper.statusDescription)")
             if let pid = Helper.connectionPID() {
                 print("connection: active (pid \(pid))")
@@ -32,6 +43,9 @@ enum RWTHVPNCLI {
                 print("connection: inactive")
             }
         case "disconnect":
+            guard arguments.dropFirst().isEmpty else {
+                throw CLIError.message("Usage: rwth-vpn disconnect")
+            }
             let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "stop"])
             guard result.status == 0 else {
                 throw CLIError.message(result.error.isEmpty ? "Could not disconnect." : result.error)
@@ -48,6 +62,9 @@ enum RWTHVPNCLI {
 
     private static func connect(_ arguments: ArraySlice<String>) throws {
         let values = Array(arguments)
+        guard values.count <= 1 else {
+            throw CLIError.message("Usage: rwth-vpn connect [split|full]")
+        }
         let group = values.first ?? "split"
         guard group == "split" || group == "full" else {
             throw CLIError.message("Tunnel must be 'split' or 'full'.")
@@ -74,6 +91,17 @@ enum RWTHVPNCLI {
             throw CLIError.message(result.error.isEmpty ? result.output : result.error)
         }
         print(result.output)
+    }
+
+    private static func removeHelper() throws {
+        if Helper.connectionPID() != nil {
+            let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "stop"])
+            guard result.status == 0 else {
+                throw CLIError.message(result.error.isEmpty ? "Could not disconnect." : result.error)
+            }
+        }
+        try Helper.uninstall()
+        print("Helper removed. The CLI remains installed.")
     }
 
     private static func printUsage() {
