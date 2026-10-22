@@ -9,10 +9,11 @@ The maintainers build and test on Apple Silicon; x86_64 is out of scope for v1.
 Intel Macs should use Cisco Secure Client.
 
 **Why does it need an admin password?**
-Creating a VPN tunnel requires root on macOS. Instead of running the whole app
-as root, a small helper plus a bundled openconnect client is installed once,
-root-owned, and allow-listed in `/etc/sudoers.d`. After that, connecting is
-one click.
+Creating a VPN tunnel requires root on macOS. Instead of running the whole
+client as root, an internal VPN service plus a bundled OpenConnect client is
+installed once, root-owned, and allow-listed in `/etc/sudoers.d`. The client
+prepares this automatically when you connect; after the one-time authorization,
+connecting needs no service or administrator interaction.
 
 **Where are my credentials stored?**
 In your login Keychain (`dev.local.rwth-vpn`). They are only sent to
@@ -40,7 +41,7 @@ including your general browsing.
 Run `rwth-vpn disconnect`.
 
 **How do I uninstall completely?**
-Run `rwth-vpn uninstall` to remove the CLI and helper while keeping credentials.
+Run `rwth-vpn uninstall` to remove the CLI and VPN service while keeping credentials.
 Use `rwth-vpn uninstall --purge` to remove the saved credentials too.
 
 **How do I update?**

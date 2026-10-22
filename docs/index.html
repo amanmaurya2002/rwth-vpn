@@ -101,18 +101,19 @@
       <pre id="install-command"><code>curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash</code></pre>
       <button class="copy" type="button" data-copy="#install-command" aria-label="Copy install command">Copy</button>
     </div>
-    <p class="note">Then run <code>rwth-vpn setup</code> and <code>rwth-vpn connect</code>. Setup asks for administrator authorization once to install the VPN helper.</p>
+    <p class="note">Then run <code>rwth-vpn configure</code> and <code>rwth-vpn connect</code>. The first connection prepares the VPN service automatically and asks for administrator authorization once if needed.</p>
   </section>
 
   <h2>CLI basics</h2>
   <ul>
     <li>Run <code>rwth-vpn configure</code> to save credentials securely in the Keychain.</li>
-    <li><code>rwth-vpn status</code> shows helper and tunnel state.</li>
-    <li><code>rwth-vpn uninstall</code> removes the CLI and helper; add <code>--purge</code> to remove credentials too.</li>
+    <li><code>rwth-vpn</code> opens an interactive dashboard for connecting, disconnecting, and account setup.</li>
+    <li><code>rwth-vpn status</code> shows VPN service and tunnel state.</li>
+    <li><code>rwth-vpn uninstall</code> removes the CLI and VPN service; add <code>--purge</code> to remove credentials too.</li>
   </ul>
 
   <h2>Why</h2>
-  <p>The CLI keeps the workflow small: install one script, authorize the helper once, and connect from the terminal. Split tunnel is the default, so your local network keeps working.</p>
+  <p>The CLI keeps the workflow small: install one script, authorize the VPN service once, and connect from the terminal. Split tunnel is the default, so your local network keeps working.</p>
 
   <footer>
     <a data-repo-link="">Source</a> ·
