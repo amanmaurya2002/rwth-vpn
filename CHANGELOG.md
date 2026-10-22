@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.3
+
+- Added a clearer interactive CLI presentation with colored status output.
+- Made uninstall confirm its scope and support `--yes` for automation.
+- Limited CLI cleanup to its own files instead of removing the entire install
+  prefix.
+
 ## 1.2.2
 
 - Fixed `rwth-vpn remove` so it removes only the helper while leaving the CLI

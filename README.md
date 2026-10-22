@@ -42,8 +42,9 @@ rwth-vpn connect
 
 The CLI shares credentials with the app. `rwth-vpn setup` still requires one
 administrator authorization because it installs the privileged VPN helper.
-Remove the CLI later with `rwth-vpn uninstall`; add `--purge` only if you also
-want to delete the shared Keychain credentials.
+Remove the CLI later with `rwth-vpn uninstall`; it asks for confirmation and
+only removes the installed CLI and helper. Add `--purge` only if you also want
+to delete the shared Keychain credentials. Use `--yes` for scripted removal.
 
 ### App
 
