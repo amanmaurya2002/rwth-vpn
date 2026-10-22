@@ -120,6 +120,7 @@ struct MainView: View {
             }
             Spacer(minLength: 0)
             Text(model.isConnected ? "Connected" : (hasError ? "Error" : "Offline"))
+                .accessibilityLabel(model.isConnected ? "Connected" : (hasError ? "Error" : "Not connected"))
                 .font(.system(size: 10, weight: .semibold))
                 .padding(.horizontal, 9)
                 .padding(.vertical, 4)
@@ -215,6 +216,8 @@ struct MainView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+        .accessibilityLabel("\(title) tunnel")
     }
 
     @ViewBuilder
@@ -464,7 +467,7 @@ struct SettingsView: View {
             }
 
             Spacer(minLength: 0)
-            Text("vpn.rwth-aachen.de · openconnect \(AppInfo.version) · credentials in your Keychain")
+            Text("vpn.rwth-aachen.de · v\(AppInfo.version) · credentials in your Keychain")
                 .font(.system(size: 9))
                 .foregroundStyle(.tertiary)
         }
