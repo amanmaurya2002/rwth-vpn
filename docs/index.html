@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RWTH VPN — a tiny macOS client</title>
-<meta name="description" content="Unofficial native VPN client for RWTH Aachen. Apple Silicon, Keychain storage, one-click connect. No Cisco client, no Terminal.">
+<title>RWTH VPN — simple CLI for RWTH Aachen</title>
+<meta name="description" content="Unofficial RWTH Aachen VPN CLI for Apple Silicon Macs, with an experimental native desktop app.">
 <link rel="icon" href="icon.png">
 <style>
   :root {
@@ -21,7 +21,7 @@
     font: 16px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 700px; margin: 0 auto; padding: 64px 24px 72px; }
+  main { max-width: 680px; margin: 0 auto; padding: 64px 24px 72px; }
   header { display: flex; align-items: center; gap: 14px; }
   header img { width: 54px; height: 54px; border-radius: 12px; }
   h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
@@ -48,6 +48,18 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 10px;
     padding: 13px 15px; margin: 16px 0 0; font-size: 14px; color: var(--muted);
   }
+  .install {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px; margin-top: 28px;
+  }
+  .install h2 { margin: 0 0 8px; color: var(--fg); font-size: 18px; letter-spacing: -0.01em; text-transform: none; }
+  .install p { margin: 0 0 12px; color: var(--muted); }
+  pre {
+    overflow-x: auto; margin: 0; padding: 13px 14px; border-radius: 8px;
+    background: #111318; color: #f2f4f7; font-size: 13px;
+  }
+  .experimental { margin-top: 28px; }
+  .experimental h2 { margin-top: 0; }
   footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
   footer a { color: inherit; }
   a { color: var(--accent); }
@@ -61,36 +73,43 @@
     <h1>RWTH VPN</h1>
   </header>
 
-  <p class="tag">A tiny native VPN client for RWTH Aachen.</p>
-  <p class="sub">Apple Silicon · macOS 26+ · password and token stay in your Keychain.</p>
+  <p class="tag">A small VPN client for RWTH Aachen.</p>
+  <p class="sub">CLI first · Apple Silicon · macOS 26+ · credentials stay in your Keychain.</p>
 
   <div class="actions">
-    <a class="btn" data-repo-link="/releases/latest">Download</a>
-    <a class="btn secondary" data-repo-link="/blob/main/INSTALL.md">Install guide</a>
-    <span class="meta">Free · MIT · 5 MB</span>
+    <a class="btn" href="#install">Install CLI</a>
+    <a class="btn secondary" data-repo-link="/blob/main/README.md">Documentation</a>
+    <span class="meta">Free · MIT</span>
   </div>
 
   <p class="meta">Unofficial student project. Not affiliated with RWTH Aachen University or its IT Center. The supported client is Cisco Secure Client.</p>
 
-  <img class="shot" src="preview-main.png" alt="The RWTH VPN window: status, connect button and tunnel picker.">
+  <section class="install" id="install">
+    <h2>Install the CLI</h2>
+    <p>Recommended. No Homebrew and no app download required.</p>
+    <pre><code>curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash</code></pre>
+    <p class="note">Then run <code>rwth-vpn setup</code> and <code>rwth-vpn connect</code>. Setup asks for administrator authorization once to install the VPN helper.</p>
+  </section>
 
-  <h2>Install</h2>
-  <ol>
-    <li>Download the DMG and drag <strong>RWTH VPN</strong> into Applications.</li>
-    <li>Open it once. macOS blocks it, because the app is not notarized.</li>
-    <li>Go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</li>
-  </ol>
-  <p class="note">The app is not notarized, so macOS 26 requires the one-time <strong>Open Anyway</strong> approval in System Settings → Privacy &amp; Security. The <a data-repo-link="/blob/main/INSTALL.md">install guide</a> shows the exact dialogs.</p>
+  <section class="experimental">
+    <h2>Experimental desktop app</h2>
+    <p class="sub">The native app provides a menu bar interface, but it is not notarized and requires macOS's <strong>Open Anyway</strong> approval.</p>
+    <div class="actions">
+      <a class="btn secondary" data-repo-link="/releases/latest">Download app</a>
+      <a class="meta" data-repo-link="/blob/main/INSTALL.md">Installation guide</a>
+    </div>
+    <img class="shot" src="preview-main.png" alt="The experimental RWTH VPN desktop app.">
+  </section>
 
-  <h2>First run</h2>
+  <h2>CLI basics</h2>
   <ul>
-    <li>Settings → username, VPN password, token secret (optional — otherwise type the code there before connecting).</li>
-    <li>Click <strong>Install…</strong> once. A small root-owned helper is installed; after that, connecting never asks for an admin password.</li>
-    <li>Connect. A shield appears in the menu bar while the tunnel is up.</li>
+    <li>Configure credentials in the desktop app first; the CLI uses the same Keychain entries.</li>
+    <li><code>rwth-vpn status</code> shows helper and tunnel state.</li>
+    <li><code>rwth-vpn uninstall</code> removes the CLI and helper; add <code>--purge</code> to remove credentials too.</li>
   </ul>
 
   <h2>Why</h2>
-  <p>The official client is heavy and keeps asking for credentials and codes. This one keeps them in the Keychain, generates the TOTP code, and connects with one click. Split tunnel by default, so your local network keeps working.</p>
+  <p>The CLI keeps the workflow small: install one script, authorize the helper once, and connect from the terminal. Split tunnel is the default, so your local network keeps working.</p>
 
   <footer>
     <a data-repo-link="">Source</a> ·
