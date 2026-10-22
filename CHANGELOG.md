@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.4
+
+- Added `rwth-vpn update` and `rwth-vpn update --check` for verified in-place
+  CLI updates.
+
 ## 1.2.3
 
 - Added a clearer interactive CLI presentation with colored status output.

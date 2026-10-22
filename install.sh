@@ -45,6 +45,7 @@ cat > "$BIN_DIR/rwth-vpn" <<EOF
 #!/bin/sh
 export RWTH_VPN_RESOURCE_ROOT="$LIBEXEC_DIR/resources"
 export RWTH_VPN_INSTALL_ROOT="$PREFIX"
+export RWTH_VPN_VERSION="$version"
 exec "$LIBEXEC_DIR/rwth-vpn-cli" "\$@"
 EOF
 chmod 0755 "$BIN_DIR/rwth-vpn"

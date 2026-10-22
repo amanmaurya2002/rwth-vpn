@@ -40,6 +40,15 @@ rwth-vpn setup
 rwth-vpn connect
 ```
 
+Update the CLI in place with:
+
+```bash
+rwth-vpn update
+```
+
+Use `rwth-vpn update --check` to check without downloading, or
+`rwth-vpn update --yes` for scripted updates.
+
 The CLI shares credentials with the app. `rwth-vpn setup` still requires one
 administrator authorization because it installs the privileged VPN helper.
 Remove the CLI later with `rwth-vpn uninstall`; it asks for confirmation and

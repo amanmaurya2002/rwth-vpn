@@ -95,6 +95,8 @@ curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/instal
 It downloads the latest CLI archive, verifies `SHA256SUMS.txt`, and installs to
 `~/.local/bin`. After installation, `rwth-vpn setup` installs the privileged
 helper and `rwth-vpn connect` uses credentials shared with the app.
+Installed users can update in place with `rwth-vpn update`; `rwth-vpn update
+--check` checks without downloading.
 
 `rwth-vpn uninstall` removes the helper and CLI; credentials remain unless
 `rwth-vpn uninstall --purge` is used.

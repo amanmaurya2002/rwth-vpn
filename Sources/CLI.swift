@@ -56,6 +56,8 @@ enum RWTHVPNCLI {
             Terminal.success("Disconnected.")
         case "connect":
             try connect(arguments.dropFirst())
+        case "update":
+            try update(arguments.dropFirst())
         case "help", "--help", "-h":
             printUsage()
         default:
@@ -123,6 +125,7 @@ enum RWTHVPNCLI {
           status      Show helper and tunnel status
           connect     Connect using credentials shared with the app
           disconnect  Disconnect the active tunnel
+          update      Check for and install the latest CLI release
           uninstall   Remove the CLI and helper
 
         Examples:
@@ -133,6 +136,161 @@ enum RWTHVPNCLI {
         """)
     }
 
+    private static func update(_ arguments: ArraySlice<String>) throws {
+        let values = Array(arguments)
+        let check = values.contains("--check")
+        let yes = values.contains("--yes")
+        let unknown = values.filter { $0 != "--check" && $0 != "--yes" }
+        guard unknown.isEmpty,
+              values.filter({ $0 == "--check" }).count <= 1,
+              values.filter({ $0 == "--yes" }).count <= 1
+        else {
+            throw CLIError.message("Usage: rwth-vpn update [--check] [--yes]")
+        }
+
+        let release = try CLIUpdater.latestRelease()
+        if let current = ProcessInfo.processInfo.environment["RWTH_VPN_VERSION"],
+           current == release.version {
+            Terminal.success("Already up to date (\(current)).")
+            return
+        }
+        Terminal.success("Latest release: \(release.version)")
+        if check {
+            return
+        }
+        guard let root = ProcessInfo.processInfo.environment["RWTH_VPN_INSTALL_ROOT"],
+              !root.isEmpty
+        else {
+            throw CLIError.message("This CLI was not installed by the direct installer. Reinstall it before using 'rwth-vpn update'.")
+        }
+        if !yes {
+            guard confirm("Install rwth-vpn \(release.version)?") else {
+                Terminal.muted("Cancelled.")
+                return
+            }
+        }
+        try CLIUpdater.install(release, root: root)
+        Terminal.success("Updated to \(release.version).")
+    }
+
+    private enum CLIUpdater {
+            struct Release {
+            let version: String
+            let tag: String
+            let archive: String
+            let baseURL: URL
+    }
+
+        static let apiURL = URL(string: "https://api.github.com/repos/amanmaurya2002/rwth-vpn/releases/latest")!
+        static let downloadRoot = "https://github.com/amanmaurya2002/rwth-vpn/releases/download"
+
+        static func latestRelease() throws -> Release {
+            let result = run("/usr/bin/curl", ["-fsSL", "-H", "Accept: application/vnd.github+json",
+                                               "-A", "rwth-vpn-cli", apiURL.absoluteString])
+            guard result.status == 0 else {
+                throw CLIError.message(result.error.isEmpty ? "Could not check for updates." : result.error)
+            }
+            let text = result.output
+            guard let tag = match(#""tag_name"\s*:\s*"([^"]+)""#, in: text),
+                  tag.range(of: #"^v[0-9]+\.[0-9]+\.[0-9]+$"#, options: .regularExpression) != nil,
+                  let version = tag.split(separator: "v").last.map(String.init)
+            else {
+                throw CLIError.message("The latest release response was invalid.")
+            }
+            let archive = "rwth-vpn-cli-\(version).tar.gz"
+            guard let baseURL = URL(string: "\(downloadRoot)/\(tag)") else {
+                throw CLIError.message("The latest release URL was invalid.")
+            }
+            return Release(version: version, tag: tag, archive: archive, baseURL: baseURL)
+        }
+
+        static func install(_ release: Release, root: String) throws {
+            let fm = FileManager.default
+            let temp = fm.temporaryDirectory.appendingPathComponent("rwth-vpn-update-\(UUID().uuidString)")
+            let archiveURL = temp.appendingPathComponent(release.archive)
+            let checksumsURL = temp.appendingPathComponent("SHA256SUMS.txt")
+            let extracted = temp.appendingPathComponent("extracted")
+            try fm.createDirectory(at: extracted, withIntermediateDirectories: true)
+            defer { try? fm.removeItem(at: temp) }
+
+            for (url, destination) in [
+                (release.baseURL.appendingPathComponent(release.archive), archiveURL),
+                (release.baseURL.appendingPathComponent("SHA256SUMS.txt"), checksumsURL),
+            ] {
+                let result = run("/usr/bin/curl", ["-fsSL", "-o", destination.path, url.absoluteString])
+                guard result.status == 0 else {
+                    throw CLIError.message(result.error.isEmpty ? "Could not download the update." : result.error)
+                }
+            }
+
+            let checksum = run("/usr/bin/awk", ["-v", "name=\(release.archive)",
+                                                 "$0 ~ name { print $1; exit }", checksumsURL.path])
+            let actual = run("/usr/bin/shasum", ["-a", "256", archiveURL.path])
+            let expected = checksum.output.trimmingCharacters(in: .whitespacesAndNewlines)
+            let digest = actual.output.split(separator: " ").first.map(String.init) ?? ""
+            guard checksum.status == 0, actual.status == 0, !expected.isEmpty, expected == digest else {
+                throw CLIError.message("Update checksum verification failed.")
+            }
+
+            let extractResult = run("/usr/bin/tar", ["-xzf", archiveURL.path, "-C", extracted.path])
+            guard extractResult.status == 0 else {
+                throw CLIError.message("Could not unpack the update.")
+            }
+            let newBinary = extracted.appendingPathComponent("rwth-vpn-cli")
+            let newResources = extracted.appendingPathComponent("resources")
+            let installRoot = URL(fileURLWithPath: root, isDirectory: true)
+            let libexec = installRoot.appendingPathComponent("libexec/rwth-vpn", isDirectory: true)
+            let binary = libexec.appendingPathComponent("rwth-vpn-cli")
+            let resources = libexec.appendingPathComponent("resources", isDirectory: true)
+            guard fm.fileExists(atPath: newBinary.path), fm.fileExists(atPath: newResources.path) else {
+                throw CLIError.message("The update archive is incomplete.")
+            }
+            try fm.createDirectory(at: libexec, withIntermediateDirectories: true)
+            let stagedBinary = libexec.appendingPathComponent(".rwth-vpn-cli.new")
+            let stagedResources = libexec.appendingPathComponent(".resources.new", isDirectory: true)
+            try? fm.removeItem(at: stagedBinary)
+            try? fm.removeItem(at: stagedResources)
+            try fm.copyItem(at: newBinary, to: stagedBinary)
+            try fm.copyItem(at: newResources, to: stagedResources)
+            try? fm.removeItem(at: binary)
+            try? fm.removeItem(at: resources)
+            try fm.moveItem(at: stagedBinary, to: binary)
+            try fm.moveItem(at: stagedResources, to: resources)
+        }
+
+    private static func match(_ pattern: String, in text: String) -> String? {
+            guard let expression = try? NSRegularExpression(pattern: pattern) else { return nil }
+            let range = NSRange(text.startIndex..., in: text)
+            guard let result = expression.firstMatch(in: text, range: range),
+                  result.numberOfRanges > 1,
+                  let valueRange = Range(result.range(at: 1), in: text)
+            else { return nil }
+            return String(text[valueRange])
+        }
+
+    private static func run(_ path: String, _ arguments: [String]) -> (status: Int32, output: String, error: String) {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: path)
+            process.arguments = arguments
+            let output = Pipe()
+            let error = Pipe()
+            process.standardOutput = output
+            process.standardError = error
+            do {
+                try process.run()
+                process.waitUntilExit()
+            } catch {
+                return (-1, "", error.localizedDescription)
+            }
+            return (
+                process.terminationStatus,
+                String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self),
+                String(decoding: error.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+    }
+    }
+
     private static func uninstall(_ arguments: ArraySlice<String>) throws {
         let values = Array(arguments)
         let purge = values.contains("--purge")
@@ -141,6 +299,7 @@ enum RWTHVPNCLI {
         guard unknown.isEmpty else {
             throw CLIError.message("Usage: rwth-vpn uninstall [--purge] [--yes]")
         }
+
         guard values.filter({ $0 == "--purge" }).count <= 1,
               values.filter({ $0 == "--yes" }).count <= 1 else {
             throw CLIError.message("Usage: rwth-vpn uninstall [--purge] [--yes]")
