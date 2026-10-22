@@ -106,6 +106,7 @@ Keychain items and preferences remain; remove them with **Forget password** and
 
 | Symptom | Fix |
 |---|---|
+| `bundle format unrecognized` from `/opt/homebrew/Cellar/rwth-vpn/...` | An old Homebrew installation is still being selected. Run `brew uninstall rwth-vpn`, then `export PATH="$HOME/.local/bin:$PATH"` and `rehash` (or open a new Terminal window). Confirm with `type -a rwth-vpn`, then retry `rwth-vpn setup`. |
 | "Apple could not verify…" on first launch | System Settings → Privacy & Security → **Open Anyway** (see [INSTALL.md](INSTALL.md)) |
 | "Helper needs setup" | Settings → **Install…** |
 | "Helper update available" | Settings → **Update…** — the bundled client changed |
