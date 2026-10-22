@@ -19,7 +19,14 @@ enum AppInfo {
     /// Contract version between app and privileged helper; bump
     /// Resources/helper-version.txt when the helper or payload changes.
     static var helperVersion: String {
-        guard let url = Bundle.main.url(forResource: "helper-version", withExtension: "txt"),
+        let url: URL?
+        if let root = ProcessInfo.processInfo.environment["RWTH_VPN_RESOURCE_ROOT"] {
+            url = URL(fileURLWithPath: root, isDirectory: true)
+                .appendingPathComponent("helper-version.txt")
+        } else {
+            url = Bundle.main.url(forResource: "helper-version", withExtension: "txt")
+        }
+        guard let url,
               let text = try? String(contentsOf: url, encoding: .utf8)
         else { return "0" }
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
