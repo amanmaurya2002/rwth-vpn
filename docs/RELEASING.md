@@ -95,6 +95,16 @@ brew install amanmaurya2002/rwth-vpn/rwth-vpn
 After installation, `rwth-vpn setup` installs the privileged helper and
 `rwth-vpn connect` uses credentials shared with the app.
 
+The repository also provides a Homebrew-free installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash
+```
+
+It downloads the latest CLI archive, verifies `SHA256SUMS.txt`, and installs to
+`~/.local/bin`. `rwth-vpn uninstall` removes the helper and CLI; credentials
+remain unless `rwth-vpn uninstall --purge` is used.
+
 ## Versioning
 
 - App: semantic versioning in `Info.plist`.

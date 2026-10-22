@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Added a Homebrew-free one-line CLI installer.
+- Added `rwth-vpn uninstall` with optional `--purge` credential removal.
+
 ## 1.1.0
 
 - Added a lightweight `rwth-vpn` CLI with shared Keychain credentials and

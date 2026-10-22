@@ -22,9 +22,8 @@ enum RWTHVPNCLI {
         case "setup":
             try Helper.install()
             print("Helper installed. You can now run: rwth-vpn connect")
-        case "remove":
-            try Helper.uninstall()
-            print("Helper removed.")
+        case "remove", "uninstall":
+            try uninstall(arguments.dropFirst())
         case "status":
             print("helper: \(Helper.statusDescription)")
             if let pid = Helper.connectionPID() {
@@ -87,7 +86,55 @@ enum RWTHVPNCLI {
           status      Show helper and tunnel status
           connect     Connect using credentials shared with the app
           disconnect  Disconnect the active tunnel
+          uninstall   Remove the CLI and helper (use --purge to delete credentials)
         """)
+    }
+
+    private static func uninstall(_ arguments: ArraySlice<String>) throws {
+        let values = Array(arguments)
+        let purge = values.contains("--purge")
+        let unknown = values.filter { $0 != "--purge" }
+        guard unknown.isEmpty else {
+            throw CLIError.message("Usage: rwth-vpn uninstall [--purge]")
+        }
+
+        if Helper.connectionPID() != nil {
+            let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "stop"])
+            guard result.status == 0 else {
+                throw CLIError.message(result.error.isEmpty ? "Could not disconnect." : result.error)
+            }
+        }
+        try Helper.uninstall()
+        if purge {
+            Keychain.delete("username")
+            Keychain.delete("password")
+            Keychain.delete("totp")
+            UserDefaults.standard.removePersistentDomain(forName: "dev.local.rwth-vpn")
+        }
+
+        guard let root = ProcessInfo.processInfo.environment["RWTH_VPN_INSTALL_ROOT"] else {
+            print(purge ? "Helper removed and credentials purged." : "Helper removed.")
+            return
+        }
+
+        let manager = ProcessInfo.processInfo.environment["RWTH_VPN_PACKAGE_MANAGER"] ?? "standalone"
+        let command: String
+        if manager == "brew" {
+            command = "/opt/homebrew/bin/brew uninstall --ignore-dependencies rwth-vpn >/dev/null 2>&1 || true"
+        } else {
+            command = "/bin/rm -rf \(shellQuote(root))"
+        }
+        let script = "/bin/sh -c 'sleep 1; \(command)'"
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", script]
+        try process.run()
+        print(purge ? "Helper removed, credentials purged, and CLI uninstall started."
+                    : "Helper removed and CLI uninstall started. Credentials were kept.")
+    }
+
+    private static func shellQuote(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
     private enum CLIError: LocalizedError {

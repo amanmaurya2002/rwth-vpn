@@ -110,6 +110,9 @@ enum Helper {
         }
 
         let appPath = Bundle.main.bundlePath
+        let verification = appPath.hasSuffix(".app")
+            ? "/usr/bin/codesign --verify --strict '\(appPath)' && "
+            : ""
         let fm = FileManager.default
         let scratch = fm.temporaryDirectory.appendingPathComponent("rwth-vpn-install-\(UUID().uuidString)")
         let helperCopy = scratch.appendingPathComponent("helper")
@@ -124,7 +127,7 @@ enum Helper {
         // The app bundle is verified before anything is copied as root, so a
         // modified bundle cannot install a tampered payload.
         let command = """
-        /usr/bin/codesign --verify --strict '\(appPath)' && \
+        \(verification)\
         /bin/rm -rf '\(payloadPath).new' && \
         /bin/mkdir -p '\(payloadPath).new' && \
         /bin/cp -R '\(payloadURL.path)/.' '\(payloadPath).new/' && \

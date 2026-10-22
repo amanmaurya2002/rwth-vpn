@@ -1,9 +1,9 @@
 class RwthVpn < Formula
   desc "Lightweight RWTH Aachen VPN command-line client"
   homepage "https://amanmaurya2002.github.io/rwth-vpn/"
-  url "https://github.com/amanmaurya2002/rwth-vpn/releases/download/v1.1.0/rwth-vpn-cli-1.1.0.tar.gz"
-  sha256 "f90ba56d0e58e9fe7e1879a8a8a4f1add0d2ee84334dc46a7c97ad77b32207fb"
-  version "1.1.0"
+  url "https://github.com/amanmaurya2002/rwth-vpn/releases/download/v1.2.0/rwth-vpn-cli-1.2.0.tar.gz"
+  sha256 "5029311c7dc74f12794f43d840330db88ec0bf4adee0d77b9dd525b8dce139d8"
+  version "1.2.0"
   license "MIT"
 
   def install
@@ -12,6 +12,8 @@ class RwthVpn < Formula
     (bin/"rwth-vpn").write <<~SH
       #!/bin/sh
       export RWTH_VPN_RESOURCE_ROOT="#{libexec}/resources"
+      export RWTH_VPN_INSTALL_ROOT="#{libexec}"
+      export RWTH_VPN_PACKAGE_MANAGER="brew"
       exec "#{libexec}/rwth-vpn-cli" "$@"
     SH
   end

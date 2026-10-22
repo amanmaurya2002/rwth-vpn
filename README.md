@@ -71,6 +71,13 @@ rwth-vpn connect
   The CLI shares the app's Keychain credentials and helper. Homebrew avoids
   the `.app` Gatekeeper launch flow, but helper setup still needs admin
   authorization once.
+- **One-line installer:** without Homebrew, install the CLI directly:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash
+  ```
+  It installs into `~/.local/bin` and verifies the release checksum first.
+  Remove it later with `rwth-vpn uninstall`; add `--purge` only if you also
+  want to delete the shared Keychain credentials.
 - Closing the window keeps the app in the Dock; the menu bar shield is only
   shown while a session exists. Click it to bring the window back.
 - Quitting the app leaves an active tunnel up; reopen the app to disconnect
