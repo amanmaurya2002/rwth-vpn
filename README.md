@@ -63,10 +63,11 @@ secret it generates the code locally and shows a countdown.
 - **CLI option:** Homebrew users can install the lightweight terminal client
   instead of the app:
   ```bash
-  brew install --formula https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/Formula/rwth-vpn.rb
-  rwth-vpn setup
-  rwth-vpn connect
-  ```
+brew tap amanmaurya2002/rwth-vpn https://github.com/amanmaurya2002/rwth-vpn.git
+brew install amanmaurya2002/rwth-vpn/rwth-vpn
+rwth-vpn setup
+rwth-vpn connect
+```
   The CLI shares the app's Keychain credentials and helper. Homebrew avoids
   the `.app` Gatekeeper launch flow, but helper setup still needs admin
   authorization once.
