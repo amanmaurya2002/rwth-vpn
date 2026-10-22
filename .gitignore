@@ -1,0 +1,10 @@
+# Build output
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# Xcode / SwiftPM noise
+.swiftpm/
+*.xcuserstate
