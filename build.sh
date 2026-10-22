@@ -125,4 +125,5 @@ if [ "$DMG" = "1" ]; then
     ./scripts/make-dmg.sh
 fi
 
-echo "Built: $APP"
+echo "Built app: $APP"
+echo "Built CLI: $CLI_BIN"
