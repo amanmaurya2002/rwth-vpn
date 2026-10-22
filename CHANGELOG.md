@@ -6,6 +6,8 @@
   documentation.
 - Made the standalone `rwth-vpn` CLI the only supported product and added
   interactive credential configuration.
+- Fixed `rwth-vpn update` repeatedly reinstalling when already on the latest
+  release.
 
 ## 1.2.5
 

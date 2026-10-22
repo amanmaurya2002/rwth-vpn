@@ -85,14 +85,14 @@ enum RWTHVPNCLI {
 
         let username = VPNCore.loadUsername()
         guard let user = VPNCore.validateUsername(username) else {
-            throw CLIError.message("No valid username found. Configure it in the app first.")
+            throw CLIError.message("No valid username found. Run 'rwth-vpn configure' first.")
         }
         let password = VPNCore.loadPassword()
         guard !password.isEmpty else {
-            throw CLIError.message("No VPN password found. Configure it in the app first.")
+            throw CLIError.message("No VPN password found. Run 'rwth-vpn configure' first.")
         }
         guard let code = VPNCore.currentCode(secret: VPNCore.loadTOTPSecret()) else {
-            throw CLIError.message("No TOTP code available. Configure a token secret in the app first.")
+            throw CLIError.message("No TOTP code available. Run 'rwth-vpn configure' with your token secret first.")
         }
 
         let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "connect", group, user],
