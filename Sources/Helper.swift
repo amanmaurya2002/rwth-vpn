@@ -15,6 +15,13 @@ enum Helper {
     static let payloadPath = "/usr/local/libexec/rwth-vpn"
     static let pidfile = "/var/run/rwth-vpn-helper.pid"
 
+    private static var resourceRoot: URL? {
+        if let path = ProcessInfo.processInfo.environment["RWTH_VPN_RESOURCE_ROOT"] {
+            return URL(fileURLWithPath: path, isDirectory: true)
+        }
+        return Bundle.main.resourceURL
+    }
+
     enum InstallError: LocalizedError {
         case missingResource(String)
         case failed(String)
@@ -33,8 +40,8 @@ enum Helper {
 
     /// Hash of the bundled MANIFEST.sha256; identifies the payload exactly.
     static var bundledManifestHash: String? {
-        guard let url = Bundle.main.url(forResource: "MANIFEST", withExtension: "sha256",
-                                        subdirectory: "openconnect"),
+        guard let root = resourceRoot,
+              let url = root.appendingPathComponent("openconnect/MANIFEST.sha256") as URL?,
               let data = try? Data(contentsOf: url)
         else { return nil }
         return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
@@ -74,6 +81,14 @@ enum Helper {
         return false
     }
 
+    static var statusDescription: String {
+        switch status {
+        case .missing: return "missing"
+        case .outdated(let installed): return "outdated (\(installed))"
+        case .ready: return "ready"
+        }
+    }
+
     /// PID of a session started earlier (e.g. before the app was relaunched).
     static func connectionPID() -> pid_t? {
         guard let text = try? String(contentsOfFile: pidfile, encoding: .utf8),
@@ -89,7 +104,7 @@ enum Helper {
 
     static func install() throws {
         guard let helperText = bundledHelper,
-              let payloadURL = Bundle.main.url(forResource: "openconnect", withExtension: nil)
+              let payloadURL = resourceRoot?.appendingPathComponent("openconnect", isDirectory: true)
         else {
             throw InstallError.missingResource("openconnect payload")
         }
@@ -139,7 +154,7 @@ enum Helper {
     }
 
     private static var bundledHelper: String? {
-        guard let url = Bundle.main.url(forResource: "rwth-vpn-helper", withExtension: "sh"),
+        guard let url = resourceRoot?.appendingPathComponent("rwth-vpn-helper.sh"),
               let text = try? String(contentsOf: url, encoding: .utf8),
               !text.contains("{{HELPER_VERSION}}")
         else { return nil }
@@ -155,13 +170,32 @@ enum Helper {
     }
 
     @discardableResult
-    static func run(_ launchPath: String, _ arguments: [String]) -> Result {
+    static func run(_ launchPath: String, _ arguments: [String], input: String? = nil) -> Result {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launchPath)
         process.arguments = arguments
         let out = Pipe(), err = Pipe()
         process.standardOutput = out
         process.standardError = err
+        if let input {
+            let stdin = Pipe()
+            process.standardInput = stdin
+            do {
+                try process.run()
+                stdin.fileHandleForWriting.write(Data(input.utf8))
+                try stdin.fileHandleForWriting.close()
+            } catch {
+                return Result(status: -1, output: "", error: error.localizedDescription)
+            }
+            let outData = out.fileHandleForReading.readDataToEndOfFile()
+            let errData = err.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            return Result(
+                status: process.terminationStatus,
+                output: String(decoding: outData, as: UTF8.self),
+                error: String(decoding: errData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+        }
         do {
             try process.run()
         } catch {

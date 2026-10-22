@@ -60,6 +60,16 @@ secret it generates the code locally and shows a countdown.
 - **Connect when the app opens** and **Launch at login** are in Settings.
 - **Check for Updates…** downloads and installs verified GitHub Releases updates
   without opening a browser.
+- **CLI option:** Homebrew users can install the lightweight terminal client
+  instead of the app:
+  ```bash
+  brew install --formula https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/Formula/rwth-vpn.rb
+  rwth-vpn setup
+  rwth-vpn connect
+  ```
+  The CLI shares the app's Keychain credentials and helper. Homebrew avoids
+  the `.app` Gatekeeper launch flow, but helper setup still needs admin
+  authorization once.
 - Closing the window keeps the app in the Dock; the menu bar shield is only
   shown while a session exists. Click it to bring the window back.
 - Quitting the app leaves an active tunnel up; reopen the app to disconnect

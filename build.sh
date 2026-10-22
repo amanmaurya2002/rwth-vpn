@@ -12,6 +12,7 @@ cd "$(dirname "$0")"
 
 APP="dist/RWTH VPN.app"
 BIN="$APP/Contents/MacOS/RWTHVPN"
+CLI_BIN="dist/rwth-vpn"
 VENDOR="build/vendor"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 DMG=0
@@ -47,12 +48,42 @@ swiftc \
     -swift-version 5 \
     -target arm64-apple-macos26.0 \
     -sdk "$(xcrun --show-sdk-path)" \
-    Sources/*.swift \
+    Sources/App.swift \
+    Sources/AppDelegate.swift \
+    Sources/AppInfo.swift \
+    Sources/Helper.swift \
+    Sources/Icon.swift \
+    Sources/Keychain.swift \
+    Sources/Preview.swift \
+    Sources/SelfTest.swift \
+    Sources/TOTP.swift \
+    Sources/UpdateController.swift \
+    Sources/VPNCore.swift \
+    Sources/VPNModel.swift \
+    Sources/Views.swift \
     -o "$BIN" \
     -framework AppKit \
     -framework SwiftUI \
     -framework CryptoKit \
     -framework Security
+
+echo "==> compiling CLI"
+swiftc \
+    -O \
+    -swift-version 5 \
+    -target arm64-apple-macos26.0 \
+    -sdk "$(xcrun --show-sdk-path)" \
+    Sources/AppInfo.swift \
+    Sources/Keychain.swift \
+    Sources/TOTP.swift \
+    Sources/VPNCore.swift \
+    Sources/Helper.swift \
+    Sources/CLI.swift \
+    -o "$CLI_BIN" \
+    -framework AppKit \
+    -framework CryptoKit \
+    -framework Security
+chmod +x "$CLI_BIN"
 
 chmod +x "$BIN"
 

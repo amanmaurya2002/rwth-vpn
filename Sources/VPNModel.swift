@@ -151,8 +151,7 @@ final class VPNModel: ObservableObject {
         }
 
         username = user
-        Keychain.set(passwordDraft, for: "password")
-        Keychain.set(TOTP.normalize(secretDraft), for: "totp")
+        VPNCore.saveCredentials(username: user, password: passwordDraft, secret: secretDraft)
 
         logLines = []
         tunnelIP = nil
@@ -236,13 +235,13 @@ final class VPNModel: ObservableObject {
     /// Reads the Keychain lazily so launching the app never blocks on a
     /// keychain prompt before the window exists.
     func loadStoredSecrets() {
-        if passwordDraft.isEmpty { passwordDraft = Keychain.get("password") ?? "" }
-        if secretDraft.isEmpty { secretDraft = Keychain.get("totp") ?? "" }
+        if username.isEmpty { username = VPNCore.loadUsername() }
+        if passwordDraft.isEmpty { passwordDraft = VPNCore.loadPassword() }
+        if secretDraft.isEmpty { secretDraft = VPNCore.loadTOTPSecret() }
     }
 
     func saveCredentials() {
-        Keychain.set(passwordDraft, for: "password")
-        Keychain.set(TOTP.normalize(secretDraft), for: "totp")
+        VPNCore.saveCredentials(username: username, password: passwordDraft, secret: secretDraft)
     }
 
     func forgetPassword() {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Added a lightweight `rwth-vpn` CLI with shared Keychain credentials and
+  helper management.
+- Added a Homebrew formula and CLI release archive.
+
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
