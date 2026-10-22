@@ -62,7 +62,7 @@
   </header>
 
   <p class="tag">A tiny native VPN client for RWTH Aachen.</p>
-  <p class="sub">Apple Silicon · macOS 14+ · password and token stay in your Keychain.</p>
+  <p class="sub">Apple Silicon · macOS 26+ · password and token stay in your Keychain.</p>
 
   <div class="actions">
     <a class="btn" data-repo-link="/releases/latest">Download</a>
@@ -80,7 +80,7 @@
     <li>Open it once. macOS blocks it, because the app is not notarized.</li>
     <li>Go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</li>
   </ol>
-  <p class="note">macOS 15 removed the old “right-click → Open” shortcut. The <a data-repo-link="/blob/main/INSTALL.md">install guide</a> shows the exact dialogs. On macOS 14, right-click → Open still works.</p>
+  <p class="note">The app is not notarized, so macOS 26 requires the one-time <strong>Open Anyway</strong> approval in System Settings → Privacy &amp; Security. The <a data-repo-link="/blob/main/INSTALL.md">install guide</a> shows the exact dialogs.</p>
 
   <h2>First run</h2>
   <ul>
@@ -105,7 +105,7 @@
   // Derive the repository from the Pages URL so no owner needs to be hardcoded.
   (function () {
     var host = location.hostname;
-    var owner = host.slice(-10) === 'github.io' ? host.split('.')[0] : 'OWNER';
+    var owner = host.slice(-10) === 'github.io' ? host.split('.')[0] : 'amanmaurya2002';
     var repo = location.pathname.split('/').filter(Boolean)[0] || 'rwth-vpn';
     var base = 'https://github.com/' + owner + '/' + repo;
     document.querySelectorAll('[data-repo-link]').forEach(function (link) {

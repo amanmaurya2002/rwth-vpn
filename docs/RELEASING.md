@@ -19,7 +19,7 @@
 
    Without these the release workflow builds an ad-hoc signed app and users get
    a Keychain prompt after every update.
-3. Replace `OWNER` in `Sources/AppInfo.swift` with the GitHub owner.
+3. Set the GitHub owner/repository links in `Sources/AppInfo.swift`.
 4. Enable GitHub Actions and (optionally) branch protection on `main`.
 
 ## Website (GitHub Pages)
@@ -32,8 +32,8 @@ is present). Enable it once:
 3. **Branch:** `main`, **folder:** `/docs`, then **Save**.
 
 It is served at `https://<owner>.github.io/<repo>/`. The page derives the
-repository from the URL, so Download/Install/Issues links work without editing
-`OWNER` anywhere. Update screenshots with:
+repository from the URL, with the project owner as a safe fallback for custom
+domains. Update screenshots with:
 
 ```bash
 "dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --render-preview docs/
