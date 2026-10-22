@@ -3,7 +3,7 @@ import Foundation
 /// Single place for versions, links and product strings.
 enum AppInfo {
     static let name = "RWTH VPN"
-    static let repository = "https://github.com/OWNER/rwth-vpn"
+    static let repository = "https://github.com/amanmaurya2002/rwth-vpn"
     static let releases = repository + "/releases/latest"
     static let issues = repository + "/issues/new/choose"
 
