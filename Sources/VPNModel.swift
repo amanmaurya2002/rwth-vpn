@@ -180,11 +180,11 @@ final class VPNModel: ObservableObject {
                 return
             }
             let text = String(decoding: data, as: UTF8.self)
-            Task { @MainActor in self?.ingest(text) }
+            Task { @MainActor [weak self] in self?.ingest(text) }
         }
 
         task.terminationHandler = { [weak self] finished in
-            Task { @MainActor in self?.handleTermination(finished) }
+            Task { @MainActor [weak self] in self?.handleTermination(finished) }
         }
 
         // Publish the pipes before starting: the client can print its first
@@ -482,7 +482,7 @@ final class VPNModel: ObservableObject {
     /// notices when one of them disappears.
     private func startStateSync() {
         syncTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self, self.process == nil else { return }
                 let external = Helper.connectionPID() != nil
                 if external, !self.isConnected, !self.isBusy {
