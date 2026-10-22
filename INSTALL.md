@@ -6,7 +6,7 @@ notarization requires a paid Apple Developer account and this project is a
 student project. macOS therefore blocks the first launch until you explicitly
 allow it. That is expected, not a sign of a broken download.
 
-You need an **Apple Silicon** Mac with **macOS 14 or newer**.
+You need an **Apple Silicon** Mac with **macOS 26 or newer**.
 
 ## 1. Download and copy the app
 
@@ -17,9 +17,9 @@ You need an **Apple Silicon** Mac with **macOS 14 or newer**.
 
 ## 2. Allow the app to run (one time)
 
-### macOS 15 and newer
+### macOS 26 and newer
 
-Control-clicking no longer bypasses Gatekeeper — Apple removed that in macOS 15.
+Control-clicking no longer bypasses Gatekeeper on current macOS releases.
 Use System Settings:
 
 1. Open **RWTH VPN** from Applications. You will see *"Apple could not verify
@@ -32,11 +32,6 @@ Use System Settings:
 5. Confirm with **Open Anyway** in the second dialog.
 
 The app now starts. You only do this once.
-
-### macOS 14
-
-Control-click the app in Finder and choose **Open**, then **Open** again in the
-dialog. If that is not offered, use the macOS 15 steps above.
 
 ### Terminal alternative
 

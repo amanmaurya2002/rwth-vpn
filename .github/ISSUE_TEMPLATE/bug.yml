@@ -19,7 +19,7 @@ body:
     id: macos
     attributes:
       label: macOS version and chip
-      placeholder: macOS 15.1, M2
+      placeholder: macOS 26.0, M2
     validations:
       required: true
   - type: textarea
@@ -51,5 +51,5 @@ body:
       options:
         - label: I did not include my password or token secret.
           required: true
-        - label: I am on an Apple Silicon Mac with macOS 14+.
+        - label: I am on an Apple Silicon Mac with macOS 26+.
           required: true

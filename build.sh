@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds "RWTH VPN.app" into ./dist for Apple Silicon (macOS 14+).
+# Builds "RWTH VPN.app" into ./dist for Apple Silicon (macOS 26+).
 #
 #   ./build.sh              build (reuses build/vendor if present)
 #   ./build.sh --revendor   re-bundle openconnect from Homebrew first
@@ -45,7 +45,7 @@ cp -R licenses "$APP/Contents/Resources/licenses"
 swiftc \
     -O \
     -swift-version 5 \
-    -target arm64-apple-macos14.0 \
+    -target arm64-apple-macos26.0 \
     -sdk "$(xcrun --show-sdk-path)" \
     Sources/*.swift \
     -o "$BIN" \

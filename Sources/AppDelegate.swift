@@ -51,8 +51,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let newWindow = NSWindow(contentViewController: hosting)
             newWindow.title = "RWTH VPN"
             newWindow.styleMask = [.titled, .closable, .miniaturizable]
+            newWindow.titlebarAppearsTransparent = true
+            newWindow.titleVisibility = .hidden
+            newWindow.isMovableByWindowBackground = true
             newWindow.isReleasedWhenClosed = false
-            newWindow.setContentSize(NSSize(width: 420, height: 580))
+            newWindow.setContentSize(NSSize(width: 460, height: 680))
             newWindow.center()
             window = newWindow
         }

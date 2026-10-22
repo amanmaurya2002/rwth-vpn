@@ -15,7 +15,7 @@ Cisco client, no Terminal, no Homebrew on the target machine.
 ## Requirements
 
 - **Apple Silicon** Mac (M1 or newer)
-- **macOS 14 Sonoma** or newer
+- **macOS 26** or newer
 - A VPN account and a token, both set up in
   [IdM SelfService](https://idm.rwth-aachen.de/selfservice/Accounts?2)
 
@@ -30,7 +30,7 @@ Intel Macs are not supported. Use Cisco Secure Client there.
    to **System Settings → Privacy & Security**, scroll down and click
    **Open Anyway**, authenticate, and confirm.
 
-   On macOS 14 and older, right-click the app → **Open** works instead.
+   On macOS 26, use the **Open Anyway** flow described in `INSTALL.md`.
 
    Terminal alternative: `xattr -dr com.apple.quarantine "/Applications/RWTH VPN.app"`
 

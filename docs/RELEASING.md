@@ -39,7 +39,7 @@
 
 5. Manual QA (the parts tests cannot cover):
    - [ ] Fresh download: DMG opens, app drags to Applications
-   - [ ] macOS 15+: Open Anyway flow works, app launches
+   - [ ] macOS 26+: Open Anyway flow works, app launches
    - [ ] Helper install with admin prompt; connect succeeds
    - [ ] Disconnect restores DNS and routes (`scutil --dns`, `netstat -rn`)
    - [ ] Sleep/wake, then reconnect
