@@ -123,11 +123,16 @@ enum Helper {
         let fm = FileManager.default
         let scratch = fm.temporaryDirectory.appendingPathComponent("rwth-vpn-install-\(UUID().uuidString)")
         let helperCopy = scratch.appendingPathComponent("helper")
+        let payloadCopy = scratch.appendingPathComponent("openconnect", isDirectory: true)
         let sudoersCopy = scratch.appendingPathComponent("sudoers")
         try fm.createDirectory(at: scratch, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: scratch) }
 
         try helperText.write(to: helperCopy, atomically: true, encoding: .utf8)
+        // Stage the payload as the logged-in user. An administrator shell
+        // launched through osascript cannot directly read protected folders
+        // such as ~/Documents on macOS.
+        try fm.copyItem(at: payloadURL, to: payloadCopy)
         let rule = "\(NSUserName()) ALL=(root) NOPASSWD: \(path)\n"
         try rule.write(to: sudoersCopy, atomically: true, encoding: .utf8)
 
@@ -137,7 +142,7 @@ enum Helper {
         \(verification)\
         /bin/rm -rf '\(payloadPath).new' && \
         /bin/mkdir -p '\(payloadPath).new' && \
-        /bin/cp -R '\(payloadURL.path)/.' '\(payloadPath).new/' && \
+        /bin/cp -R '\(payloadCopy.path)/.' '\(payloadPath).new/' && \
         /usr/sbin/chown -R root:wheel '\(payloadPath).new' && \
         /bin/chmod -R go-w '\(payloadPath).new' && \
         /bin/rm -rf '\(payloadPath)' && \
