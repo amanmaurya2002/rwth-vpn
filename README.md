@@ -58,6 +58,8 @@ secret it generates the code locally and shows a countdown.
   your local network and printer keep working.
 - **Full tunnel** routes everything through RWTH.
 - **Connect when the app opens** and **Launch at login** are in Settings.
+- **Check for Updates…** downloads and installs verified GitHub Releases updates
+  without opening a browser.
 - Closing the window keeps the app in the Dock; the menu bar shield is only
   shown while a session exists. Click it to bring the window back.
 - Quitting the app leaves an active tunnel up; reopen the app to disconnect

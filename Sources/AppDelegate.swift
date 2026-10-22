@@ -142,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let licencesItem = appMenu.addItem(withTitle: "Licences", action: #selector(openLicences), keyEquivalent: "")
         licencesItem.target = self
         appMenu.addItem(.separator())
-        let updatesItem = appMenu.addItem(withTitle: "Check for Updates…", action: #selector(openReleases), keyEquivalent: "")
+        let updatesItem = appMenu.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
         updatesItem.target = self
         let issuesItem = appMenu.addItem(withTitle: "Report an Issue…", action: #selector(openIssues), keyEquivalent: "")
         issuesItem.target = self
@@ -198,9 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func openReleases() {
-        if let url = URL(string: AppInfo.releases) { NSWorkspace.shared.open(url) }
-    }
+    @objc private func checkForUpdates() { UpdateController.shared.checkForUpdates() }
 
     @objc private func openIssues() {
         if let url = URL(string: AppInfo.issues) { NSWorkspace.shared.open(url) }

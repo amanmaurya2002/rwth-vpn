@@ -297,7 +297,7 @@ struct SettingsView: View {
                 Button("Forget password") { model.forgetPassword() }
                     .buttonStyle(.bordered)
                 Button("Check for updates") {
-                    if let url = URL(string: AppInfo.releases) { NSWorkspace.shared.open(url) }
+                    UpdateController.shared.checkForUpdates()
                 }
                 .buttonStyle(.bordered)
                 Spacer()

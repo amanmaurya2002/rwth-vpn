@@ -5,6 +5,7 @@ enum AppInfo {
     static let name = "RWTH VPN"
     static let repository = "https://github.com/amanmaurya2002/rwth-vpn"
     static let releases = repository + "/releases/latest"
+    static let latestReleaseAPI = "https://api.github.com/repos/amanmaurya2002/rwth-vpn/releases/latest"
     static let issues = repository + "/issues/new/choose"
 
     static var version: String {
