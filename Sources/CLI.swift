@@ -117,13 +117,7 @@ enum RWTHVPNCLI {
             return
         }
 
-        let manager = ProcessInfo.processInfo.environment["RWTH_VPN_PACKAGE_MANAGER"] ?? "standalone"
-        let command: String
-        if manager == "brew" {
-            command = "/opt/homebrew/bin/brew uninstall --ignore-dependencies rwth-vpn >/dev/null 2>&1 || true"
-        } else {
-            command = "/bin/rm -rf \(shellQuote(root))"
-        }
+        let command = "/bin/rm -rf \(shellQuote(root))"
         let script = "/bin/sh -c 'sleep 1; \(command)'"
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")

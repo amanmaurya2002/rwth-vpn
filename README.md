@@ -25,7 +25,7 @@ Intel Macs are not supported. Use Cisco Secure Client there.
 
 ### CLI (recommended for terminal use)
 
-The CLI can be installed directly without Homebrew:
+The CLI can be installed directly:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash
@@ -44,13 +44,6 @@ The CLI shares credentials with the app. `rwth-vpn setup` still requires one
 administrator authorization because it installs the privileged VPN helper.
 Remove the CLI later with `rwth-vpn uninstall`; add `--purge` only if you also
 want to delete the shared Keychain credentials.
-
-Homebrew is an optional alternative:
-
-```bash
-brew tap amanmaurya2002/rwth-vpn https://github.com/amanmaurya2002/rwth-vpn.git
-brew install amanmaurya2002/rwth-vpn/rwth-vpn
-```
 
 ### App
 
