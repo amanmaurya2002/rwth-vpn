@@ -23,6 +23,37 @@ Intel Macs are not supported. Use Cisco Secure Client there.
 
 ## Install
 
+### CLI (recommended for terminal use)
+
+The CLI can be installed directly without Homebrew:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash
+```
+
+This installs the latest CLI into `~/.local/bin` and verifies the release
+checksum first. Add that directory to your `PATH` if the installer asks you
+to, then run:
+
+```bash
+rwth-vpn setup
+rwth-vpn connect
+```
+
+The CLI shares credentials with the app. `rwth-vpn setup` still requires one
+administrator authorization because it installs the privileged VPN helper.
+Remove the CLI later with `rwth-vpn uninstall`; add `--purge` only if you also
+want to delete the shared Keychain credentials.
+
+Homebrew is an optional alternative:
+
+```bash
+brew tap amanmaurya2002/rwth-vpn https://github.com/amanmaurya2002/rwth-vpn.git
+brew install amanmaurya2002/rwth-vpn/rwth-vpn
+```
+
+### App
+
 1. Download `RWTH VPN-1.0.0.dmg` from [Releases](../../releases/latest).
 2. Open the DMG and drag **RWTH VPN** into **Applications**.
 3. The app is not notarized (this project has no Apple Developer account), so
@@ -60,24 +91,6 @@ secret it generates the code locally and shows a countdown.
 - **Connect when the app opens** and **Launch at login** are in Settings.
 - **Check for Updates…** downloads and installs verified GitHub Releases updates
   without opening a browser.
-- **CLI option:** Homebrew users can install the lightweight terminal client
-  instead of the app:
-  ```bash
-brew tap amanmaurya2002/rwth-vpn https://github.com/amanmaurya2002/rwth-vpn.git
-brew install amanmaurya2002/rwth-vpn/rwth-vpn
-rwth-vpn setup
-rwth-vpn connect
-```
-  The CLI shares the app's Keychain credentials and helper. Homebrew avoids
-  the `.app` Gatekeeper launch flow, but helper setup still needs admin
-  authorization once.
-- **One-line installer:** without Homebrew, install the CLI directly:
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash
-  ```
-  It installs into `~/.local/bin` and verifies the release checksum first.
-  Remove it later with `rwth-vpn uninstall`; add `--purge` only if you also
-  want to delete the shared Keychain credentials.
 - Closing the window keeps the app in the Dock; the menu bar shield is only
   shown while a session exists. Click it to bring the window back.
 - Quitting the app leaves an active tunnel up; reopen the app to disconnect
