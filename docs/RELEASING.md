@@ -1,0 +1,70 @@
+# Releasing
+
+## One-time setup
+
+1. Create the repository and push `main`.
+2. Optional but recommended — stable signing identity:
+
+   ```bash
+   ./scripts/make-signing-cert.sh "RWTH VPN Releases"
+   ```
+
+   Then add two repository secrets:
+
+   | Secret | Value |
+   |---|---|
+   | `SIGN_P12_BASE64` | `base64 -i build/signing/identity.p12` |
+   | `SIGN_P12_PASSWORD` | the `.p12` password (`rwth-vpn` by default) |
+   | `SIGN_IDENTITY` | `RWTH VPN Releases` |
+
+   Without these the release workflow builds an ad-hoc signed app and users get
+   a Keychain prompt after every update.
+3. Replace `OWNER` in `Sources/AppInfo.swift` with the GitHub owner.
+4. Enable GitHub Actions and (optionally) branch protection on `main`.
+
+## Every release
+
+1. Bump the version in `Resources/Info.plist` (`CFBundleShortVersionString`,
+   `CFBundleVersion`).
+2. If the helper CLI or the bundled payload changed, bump
+   `Resources/helper-version.txt`.
+3. Update `CHANGELOG.md`.
+4. Build and test locally:
+
+   ```bash
+   ./build.sh --revendor
+   "dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --selftest
+   ./scripts/test-bundled.sh
+   ```
+
+5. Manual QA (the parts tests cannot cover):
+   - [ ] Fresh download: DMG opens, app drags to Applications
+   - [ ] macOS 15+: Open Anyway flow works, app launches
+   - [ ] Helper install with admin prompt; connect succeeds
+   - [ ] Disconnect restores DNS and routes (`scutil --dns`, `netstat -rn`)
+   - [ ] Sleep/wake, then reconnect
+   - [ ] Full tunnel connects; split tunnel leaves local network reachable
+   - [ ] Uninstall removes helper, payload and sudoers rule
+6. Commit, tag, push:
+
+   ```bash
+   git add -A && git commit -m "Release v1.0.0"
+   git tag -s v1.0.0 -m "v1.0.0"
+   git push && git push --tags
+   ```
+
+7. The `Release` workflow builds the DMG, zip and `SHA256SUMS.txt` and attaches
+   them to the GitHub release. Verify the artefact names and download one DMG
+   yourself.
+
+## Versioning
+
+- App: semantic versioning in `Info.plist`.
+- Helper/payload contract: `Resources/helper-version.txt`, bumped whenever the
+  helper CLI or the bundled openconnect build changes.
+- `VERSIONS.txt` inside the app records the exact Homebrew versions bundled.
+
+## Rolling back
+
+Releases are immutable tags. To undo a bad release, publish a new patch version
+and mark the old one as pre-release on GitHub.

@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
 
         syncStatusItem(model.status)
+        model.loadStoredSecrets()
 
         // Migration aid: an outdated helper would fail silently, so surface
         // the one-click reinstall straight away.
@@ -133,11 +134,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenuItem = NSMenuItem()
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
-        appMenu.addItem(
-            withTitle: "About RWTH VPN",
-            action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
-            keyEquivalent: ""
-        )
+        let aboutItem = appMenu.addItem(withTitle: "About RWTH VPN", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        let licencesItem = appMenu.addItem(withTitle: "Licences", action: #selector(openLicences), keyEquivalent: "")
+        licencesItem.target = self
+        appMenu.addItem(.separator())
+        let updatesItem = appMenu.addItem(withTitle: "Check for Updates…", action: #selector(openReleases), keyEquivalent: "")
+        updatesItem.target = self
+        let issuesItem = appMenu.addItem(withTitle: "Report an Issue…", action: #selector(openIssues), keyEquivalent: "")
+        issuesItem.target = self
         appMenu.addItem(.separator())
         let settingsItem = appMenu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
@@ -160,6 +165,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         editMenuItem.submenu = editMenu
 
         NSApp.mainMenu = mainMenu
+    }
+
+    @objc private func showAbout() {
+        let credits = NSMutableAttributedString(
+            string: AppInfo.disclaimer + "\n\n",
+            attributes: [.font: NSFont.systemFont(ofSize: 11)]
+        )
+        credits.append(NSAttributedString(
+            string: AppInfo.repository,
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 11),
+                .link: URL(string: AppInfo.repository)!,
+            ]
+        ))
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .applicationName: AppInfo.name,
+            .applicationVersion: AppInfo.version,
+            .version: "build \(AppInfo.build)",
+            .credits: credits,
+        ])
+    }
+
+    @objc private func openLicences() {
+        if let url = Bundle.main.url(forResource: "THIRD-PARTY-NOTICES", withExtension: "md") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: AppInfo.repository) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc private func openReleases() {
+        if let url = URL(string: AppInfo.releases) { NSWorkspace.shared.open(url) }
+    }
+
+    @objc private func openIssues() {
+        if let url = URL(string: AppInfo.issues) { NSWorkspace.shared.open(url) }
     }
 
     @objc private func openSettings() {

@@ -20,7 +20,8 @@ final class VPNModel: ObservableObject {
     @Published var sessionExpiry: String?
     @Published var showLog = false
     @Published var showSettings = false
-    @Published var helperInstalled = Helper.isInstalled
+    @Published var helperInstalled = false
+    @Published var helperOutdated = false
     @Published var helperProblem: String?
 
     @Published var username: String = UserDefaults.standard.string(forKey: "username") ?? "" {
@@ -31,8 +32,8 @@ final class VPNModel: ObservableObject {
         didSet { if !suppressPersistence { UserDefaults.standard.set(group, forKey: "group") } }
     }
 
-    @Published var passwordDraft: String = Keychain.get("password") ?? ""
-    @Published var secretDraft: String = Keychain.get("totp") ?? ""
+    @Published var passwordDraft: String = ""
+    @Published var secretDraft: String = ""
     @Published var manualCode: String = ""
 
     @Published var launchAtLogin: Bool = LoginItem.isEnabled
@@ -134,8 +135,15 @@ final class VPNModel: ObservableObject {
         if let debug = DebugCommand.current {
             launch = debug
         } else {
-            guard Helper.isInstalled, Helper.isUpToDate else {
+            switch Helper.status {
+            case .ready:
+                break
+            case .outdated:
                 status = .failed("Update the helper to finish setup.")
+                showSettings = true
+                return
+            case .missing:
+                status = .failed("Set up the helper first.")
                 showSettings = true
                 return
             }
@@ -179,18 +187,24 @@ final class VPNModel: ObservableObject {
             Task { @MainActor in self?.handleTermination(finished) }
         }
 
-        do {
-            try task.run()
-        } catch {
-            status = .failed("Could not start openconnect.")
-            appendLog("error: \(error.localizedDescription)")
-            return
-        }
-
+        // Publish the pipes before starting: the client can print its first
+        // prompt immediately, and the handler needs stdin to answer it.
         process = task
         stdinPipe = input
         outputPipe = output
         scheduleWatchdog()
+
+        do {
+            try task.run()
+        } catch {
+            process = nil
+            stdinPipe = nil
+            outputPipe = nil
+            stopWatchdog()
+            status = .failed("Could not start openconnect.")
+            appendLog("error: \(error.localizedDescription)")
+            return
+        }
     }
 
     func disconnect() {
@@ -217,6 +231,13 @@ final class VPNModel: ObservableObject {
         } else {
             connect()
         }
+    }
+
+    /// Reads the Keychain lazily so launching the app never blocks on a
+    /// keychain prompt before the window exists.
+    func loadStoredSecrets() {
+        if passwordDraft.isEmpty { passwordDraft = Keychain.get("password") ?? "" }
+        if secretDraft.isEmpty { secretDraft = Keychain.get("totp") ?? "" }
     }
 
     func saveCredentials() {
@@ -265,10 +286,18 @@ final class VPNModel: ObservableObject {
     }
 
     func refreshHelperState() {
-        helperInstalled = Helper.isInstalled && Helper.isPasswordless
-        if helperInstalled && !Helper.isUpToDate {
-            helperProblem = "The installed helper is out of date — reinstall it."
+        switch Helper.status {
+        case .ready:
+            helperInstalled = true
+            helperOutdated = false
+            helperProblem = nil
+        case .outdated(let installed):
             helperInstalled = false
+            helperOutdated = true
+            helperProblem = "Helper \(installed) is out of date — update it to match the app."
+        case .missing:
+            helperInstalled = false
+            helperOutdated = false
         }
     }
 
@@ -328,6 +357,7 @@ final class VPNModel: ObservableObject {
             lastFailure = "Login failed — check your password."
         } else if line.contains("a password is required") {
             helperInstalled = false
+            helperOutdated = false
             helperProblem = "The sudo rule is not active — reinstall the helper in Settings."
             lastFailure = "Helper not authorised."
         } else if line.contains("Failed to") || line.contains("Unrecoverable") || line.contains("error") {

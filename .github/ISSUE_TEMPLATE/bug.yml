@@ -1,0 +1,55 @@
+name: Bug report
+description: Something does not work (connection, install, UI)
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste credentials, tokens, or the contents of your Keychain.**
+        Remove your username if you prefer. The Log panel (Settings → Copy)
+        contains no secrets and is safe to attach.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings → footer, e.g. v1.0.0
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and chip
+      placeholder: macOS 15.1, M2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What did you do?
+      placeholder: |
+        1. Installed from DMG
+        2. Clicked Install helper
+        3. Clicked Connect
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What happened / what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Open the Log panel, click Copy, paste here.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I did not include my password or token secret.
+          required: true
+        - label: I am on an Apple Silicon Mac with macOS 14+.
+          required: true

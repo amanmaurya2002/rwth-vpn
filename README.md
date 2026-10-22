@@ -1,121 +1,131 @@
-# RWTH VPN — native macOS app
+# RWTH VPN
 
-A lightweight native SwiftUI app (Apple Silicon, ~700 KB, no Electron) for the
-RWTH Aachen VPN. It drives `openconnect` (the open-source Cisco
-AnyConnect/SSL-VPN client) and gives you one-click connect/disconnect,
-split/full tunnel, automatic TOTP codes and Keychain-stored credentials.
+A small, native macOS app for the RWTH Aachen VPN. It stores your credentials in
+the Keychain, generates the TOTP code for you, and connects with one click — no
+Cisco client, no Terminal, no Homebrew on the target machine.
 
-Closing the window keeps the app in the Dock; a menu bar shield appears only
-while a tunnel is up or being established.
+![RWTH VPN main window](docs/preview-main.png)
 
-Unofficial. Not affiliated with RWTH Aachen University or the IT Center.
+> **Unofficial.** This is a student project. It is not affiliated with RWTH
+> Aachen University or its IT Center, and the IT Center does not support it.
+> The officially supported client is
+> [Cisco Secure Client](https://help.itc.rwth-aachen.de/en/service/vbf6fx0gom76/article/35d4a399d2984c1f8d3e364e87c366dd/).
+> Use at your own risk.
 
 ## Requirements
 
-- macOS 14 or newer (built and tested on macOS 27, Apple Silicon)
-- `openconnect` from Homebrew:
+- **Apple Silicon** Mac (M1 or newer)
+- **macOS 14 Sonoma** or newer
+- A VPN account and a token, both set up in
+  [IdM SelfService](https://idm.rwth-aachen.de/selfservice/Accounts?2)
 
-  ```bash
-  brew install openconnect
-  ```
+Intel Macs are not supported. Use Cisco Secure Client there.
 
-- The Xcode command line tools (`swiftc`, `codesign`) to build.
+## Install
 
-## Build and install
+1. Download `RWTH VPN-1.0.0.dmg` from [Releases](../../releases/latest).
+2. Open the DMG and drag **RWTH VPN** into **Applications**.
+3. The app is not notarized (this project has no Apple Developer account), so
+   macOS will block the first launch. Open it once, dismiss the dialog, then go
+   to **System Settings → Privacy & Security**, scroll down and click
+   **Open Anyway**, authenticate, and confirm.
 
-```bash
-cd rwth-vpn-menubar
-./build.sh
-cp -R "dist/RWTH VPN.app" /Applications/
-open "/Applications/RWTH VPN.app"
-```
+   On macOS 14 and older, right-click the app → **Open** works instead.
 
-Build artifacts are ad-hoc signed, which is fine for a local build.
+   Terminal alternative: `xattr -dr com.apple.quarantine "/Applications/RWTH VPN.app"`
 
-## One-time setup
+Detailed steps with the exact dialogs: [INSTALL.md](INSTALL.md).
 
-1. Open **RWTH VPN** → gear (or ⌘,) → **Settings**.
-2. Enter your **username** (`ab123456`) and your **VPN password** (the one from
-   [IdM SelfService](https://idm.rwth-aachen.de/selfservice/Accounts?2), not your
-   SSO password).
-3. Optionally paste your **token secret** to get codes generated automatically.
-   Either the Base32 secret or the full `otpauth://` enrolment link works. If
-   you skip this, you type the 6-digit code into the panel before each connect.
-4. Press **Install…** next to "Helper not installed" and confirm the admin
-   prompt once. This writes a small root-owned helper plus a `sudoers.d` rule so
-   connecting later needs no password prompt.
+## First run
 
-After that: **Connect** (⌘↩). The menu bar shield turns green when the tunnel is
-up, and the app can connect automatically when it opens.
+1. Open **RWTH VPN** and go to **Settings** (gear icon or ⌘,).
+2. Enter your username (`ab123456`), your **VPN password** (the one from IdM
+   SelfService, *not* your SSO password) and, optionally, your token secret
+   (Base32 or the full `otpauth://` link).
+3. Click **Install…** and confirm the admin prompt once. This installs a small
+   root-owned helper and a bundled openconnect client so connecting needs no
+   password prompt later.
+4. **Connect** (⌘↩). The shield appears in the menu bar while the tunnel is up.
 
-## How it works
+Without a token secret the app asks for the 6-digit code each time. With a
+secret it generates the code locally and shows a countdown.
 
-- The app runs `/usr/local/libexec/rwth-vpn-helper` through `sudo -n`. That
-  helper is root-owned, mode 0755, and accepts only
-  `connect <split|full> <ab123456>` or `stop`. It never takes extra
-  `openconnect` options, so it cannot be used to run arbitrary commands as root.
-  It records its pid and `exec`s openconnect, so the caller's stdin (password,
-  then token code) is passed through untouched.
-- Credentials travel over stdin (never argv/environment); `openconnect` prompts
-  for the password and then for the token code, and the app answers each prompt
-  as it appears.
-- The VPN password and token secret live in your login Keychain.
-- `/etc/sudoers.d/rwth-vpn-helper` contains exactly one NOPASSWD rule for that
-  one helper path.
-- A session started outside the app (for example before a relaunch) is detected
-  through `/var/run/rwth-vpn-helper.pid` and can be disconnected normally.
+![Settings](docs/preview-settings.png)
+
+## Using it
+
+- **Split tunnel** (default) routes only RWTH addresses through the VPN, so
+  your local network and printer keep working.
+- **Full tunnel** routes everything through RWTH.
+- **Connect when the app opens** and **Launch at login** are in Settings.
+- Closing the window keeps the app in the Dock; the menu bar shield is only
+  shown while a session exists. Click it to bring the window back.
+- Quitting the app leaves an active tunnel up; reopen the app to disconnect
+  (it re-attaches to the running session).
 
 ## Uninstall
 
-1. Settings → **Remove** (removes the helper and the sudoers rule).
-2. Quit the app and delete `/Applications/RWTH VPN.app`.
-
-Or manually:
+Settings → **Remove** (helper and sudoers rule), then quit and delete the app.
+Manually:
 
 ```bash
-sudo rm -f /etc/sudoers.d/rwth-vpn-helper /usr/local/libexec/rwth-vpn-helper
+sudo rm -rf /usr/local/libexec/rwth-vpn /usr/local/libexec/rwth-vpn-helper \
+            /etc/sudoers.d/rwth-vpn-helper
 ```
+
+Keychain items and preferences remain; remove them with **Forget password** and
+`defaults delete dev.local.rwth-vpn`.
 
 ## Troubleshooting
 
-- **"a password is required"** or **"Update the helper"** — the sudoers rule or
-  helper binary is stale. Settings → **Reinstall…**
-- **Menu bar icon missing** — it only appears while connecting/connected; the
-  Dock icon is always there.
-- **"The server rejected the password"** — the password field holds your SSO
-  password instead of the VPN password.
-- **"Login failed — wrong code or password"** — the code expired (they rotate
-  every 30 s) or the password is wrong.
-- **"Timed out while connecting"** — network/firewall; check the Log section
-  (toggle "Log", then "Copy") for the `openconnect` output.
-- **Full tunnel** routes everything through RWTH; **Split** only routes RWTH
-  addresses, so local devices stay reachable.
-- Quitting the app does not tear the tunnel down; disconnect first if you want
-  it closed.
+| Symptom | Fix |
+|---|---|
+| "Apple could not verify…" on first launch | System Settings → Privacy & Security → **Open Anyway** (see [INSTALL.md](INSTALL.md)) |
+| "Helper needs setup" | Settings → **Install…** |
+| "Helper update available" | Settings → **Update…** — the bundled client changed |
+| "a password is required" in the log | Reinstall the helper (sudoers rule is stale) |
+| "The server rejected the password" | You entered your SSO password; use the VPN password from SelfService |
+| "Login failed — wrong code or password" | The 6-digit code expired; try again |
+| Repeated login failures | The gateway may temporarily block your IP after several failed attempts; wait a few minutes |
+| Wrong IP / DNS after disconnect | Reconnect and disconnect once, or reboot; open an issue with the Log (Copy) |
 
-## Development
+More in [docs/FAQ.md](docs/FAQ.md).
+
+## How it works
+
+```
+RWTH VPN.app ──(sudo -n)──▶ rwth-vpn-helper ──exec──▶ openconnect
+     │                            │
+     └─ Keychain (password, TOTP) └─ root-owned payload in /usr/local/libexec/rwth-vpn
+```
+
+The app never runs as root. It asks the helper to start openconnect, answers the
+`Password:` and `Response:` prompts over stdin, and the helper's openconnect
+configures the tunnel. The bundled client is a Homebrew openconnect with its
+load paths rewritten and a CA bundle, so it works on Macs without Homebrew.
+
+Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), protocol notes:
+[docs/PROTOCOL.md](docs/PROTOCOL.md).
+
+## Build from source
 
 ```bash
-./build.sh
-"dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --selftest        # TOTP, Keychain, UI, connect state machine
-"dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --render-preview /tmp   # writes preview PNGs
+brew install openconnect          # build-time only; bundled into the app
+./build.sh                        # -> dist/RWTH VPN.app
+"dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --selftest
 ```
 
-`--selftest` drives the real connect state machine against a fake `openconnect`
-(no credentials, no root). `RWTHVPN_DEBUG_COMMAND="path args"` swaps the
-privileged helper for an arbitrary command and is only used by that test.
+`./build.sh --dmg` also produces a DMG. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for the test harness, debug flags and release process.
 
-Layout:
+## Privacy and security
 
-```
-Sources/App.swift          entry point
-Sources/AppDelegate.swift  window, menu bar status item, menus
-Sources/VPNModel.swift     session state machine + prompt handling
-Sources/Views.swift        SwiftUI panel and settings
-Sources/Helper.swift       privileged helper install/uninstall, login item
-Sources/TOTP.swift         RFC 6238 TOTP + Base32 + otpauth parsing
-Sources/Keychain.swift     Keychain storage
-Sources/Preview.swift      dev-only rendering helper
-Sources/SelfTest.swift     --selftest
-Resources/rwth-vpn-helper.sh
-```
+No telemetry. Credentials and the token secret live in your login Keychain and
+are sent only to `vpn.rwth-aachen.de`. See [PRIVACY.md](PRIVACY.md) and
+[SECURITY.md](SECURITY.md) (including how to report a vulnerability).
+
+## Licence
+
+MIT for the app ([LICENSE](LICENSE)). The bundled openconnect and its
+dependencies keep their own licences; see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

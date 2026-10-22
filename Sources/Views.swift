@@ -446,8 +446,12 @@ struct SettingsView: View {
                     .controlSize(.small)
                 Button("Forget password") { model.forgetPassword() }
                     .controlSize(.small)
+                Button("Check for updates") {
+                    if let url = URL(string: AppInfo.releases) { NSWorkspace.shared.open(url) }
+                }
+                .controlSize(.small)
                 Spacer()
-                Text("v2.0")
+                Text("v\(AppInfo.version)")
                     .font(.system(size: 9))
                     .foregroundStyle(.tertiary)
             }
@@ -460,7 +464,7 @@ struct SettingsView: View {
             }
 
             Spacer(minLength: 0)
-            Text("vpn.rwth-aachen.de · openconnect · credentials in your Keychain")
+            Text("vpn.rwth-aachen.de · openconnect \(AppInfo.version) · credentials in your Keychain")
                 .font(.system(size: 9))
                 .foregroundStyle(.tertiary)
         }
@@ -505,19 +509,25 @@ struct SettingsView: View {
                 Image(systemName: model.helperInstalled ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
                     .font(.system(size: 11))
                     .foregroundStyle(model.helperInstalled ? Color.green : Color.orange)
-                Text(model.helperInstalled ? "Helper installed" : "Helper needs setup")
+                Text(model.helperInstalled
+                     ? "Helper installed"
+                     : (model.helperOutdated ? "Helper update available" : "Helper needs setup"))
                     .font(.system(size: 11, weight: .medium))
                 Spacer()
             }
             Text(model.helperInstalled
                  ? "Connects without asking for your admin password."
-                 : "One-time setup so the app can bring the tunnel up without an admin prompt every time.")
+                 : (model.helperOutdated
+                    ? "The bundled VPN client changed. Update the helper once to match this version."
+                    : "One-time setup so the app can bring the tunnel up without an admin prompt every time."))
                 .font(.system(size: 9.5))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
-                Button(model.helperInstalled ? "Reinstall…" : "Install…") {
+                Button(model.helperInstalled
+                       ? "Reinstall…"
+                       : (model.helperOutdated ? "Update…" : "Install…")) {
                     model.installHelper()
                 }
                 .controlSize(.small)

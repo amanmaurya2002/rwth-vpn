@@ -1,32 +1,67 @@
+import CryptoKit
 import Foundation
 
-/// Everything that touches root: the privileged helper, its sudoers rule and
-/// the login item.
+/// Everything that touches root: the privileged helper, its openconnect
+/// payload, the sudoers rule and the login item.
 enum Helper {
+    enum Status: Equatable {
+        case missing
+        case outdated(installed: String)
+        case ready
+    }
+
     static let path = "/usr/local/libexec/rwth-vpn-helper"
     static let sudoersPath = "/etc/sudoers.d/rwth-vpn-helper"
+    static let payloadPath = "/usr/local/libexec/rwth-vpn"
     static let pidfile = "/var/run/rwth-vpn-helper.pid"
 
     enum InstallError: LocalizedError {
-        case missingResource
+        case missingResource(String)
         case failed(String)
 
         var errorDescription: String? {
             switch self {
-            case .missingResource:
-                return "The helper script is missing from the app bundle."
+            case .missingResource(let name):
+                return "The app bundle is incomplete (\(name) is missing). Reinstall the app."
             case .failed(let message):
                 return message
             }
         }
     }
 
-    /// The helper script shipped inside the .app.
-    static var source: String? {
-        guard let url = Bundle.main.url(forResource: "rwth-vpn-helper", withExtension: "sh"),
-              let text = try? String(contentsOf: url, encoding: .utf8)
+    // MARK: - State
+
+    /// Hash of the bundled MANIFEST.sha256; identifies the payload exactly.
+    static var bundledManifestHash: String? {
+        guard let url = Bundle.main.url(forResource: "MANIFEST", withExtension: "sha256",
+                                        subdirectory: "openconnect"),
+              let data = try? Data(contentsOf: url)
         else { return nil }
-        return text
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static var status: Status {
+        guard FileManager.default.fileExists(atPath: path),
+              FileManager.default.fileExists(atPath: sudoersPath)
+        else { return .missing }
+
+        let result = run("/usr/bin/sudo", ["-n", path, "version"])
+        guard result.status == 0 else { return .missing }
+
+        var helper = ""
+        var manifest = ""
+        for line in result.output.split(separator: "\n") {
+            if line.hasPrefix("helper=") { helper = String(line.dropFirst("helper=".count)) }
+            if line.hasPrefix("manifest=") { manifest = String(line.dropFirst("manifest=".count)) }
+        }
+
+        guard helper == AppInfo.helperVersion,
+              let bundled = bundledManifestHash,
+              manifest == bundled
+        else {
+            return .outdated(installed: helper.isEmpty ? "unknown" : helper)
+        }
+        return .ready
     }
 
     static var isInstalled: Bool {
@@ -34,19 +69,9 @@ enum Helper {
             && FileManager.default.fileExists(atPath: sudoersPath)
     }
 
-    /// True when the installed helper is byte-identical to the bundled one.
     static var isUpToDate: Bool {
-        guard let expected = source,
-              let installed = try? String(contentsOfFile: path, encoding: .utf8)
-        else { return false }
-        return expected == installed
-    }
-
-    /// Proves the NOPASSWD rule really works: the helper rejects its
-    /// arguments with exit code 64, which sudo can only report when it ran
-    /// the helper without asking for a password.
-    static var isPasswordless: Bool {
-        run("/usr/bin/sudo", ["-n", path, "__check__"]).status == 64
+        if case .ready = status { return true }
+        return false
     }
 
     /// PID of a session started earlier (e.g. before the app was relaunched).
@@ -60,21 +85,38 @@ enum Helper {
         return command.contains("openconnect") ? pid : nil
     }
 
+    // MARK: - Install / uninstall
+
     static func install() throws {
-        guard let source else { throw InstallError.missingResource }
+        guard let helperText = bundledHelper,
+              let payloadURL = Bundle.main.url(forResource: "openconnect", withExtension: nil)
+        else {
+            throw InstallError.missingResource("openconnect payload")
+        }
+
+        let appPath = Bundle.main.bundlePath
         let fm = FileManager.default
-        let scratch = fm.temporaryDirectory.appendingPathComponent("rwth-vpn-helper-\(UUID().uuidString)")
+        let scratch = fm.temporaryDirectory.appendingPathComponent("rwth-vpn-install-\(UUID().uuidString)")
         let helperCopy = scratch.appendingPathComponent("helper")
         let sudoersCopy = scratch.appendingPathComponent("sudoers")
         try fm.createDirectory(at: scratch, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: scratch) }
 
-        try source.write(to: helperCopy, atomically: true, encoding: .utf8)
+        try helperText.write(to: helperCopy, atomically: true, encoding: .utf8)
         let rule = "\(NSUserName()) ALL=(root) NOPASSWD: \(path)\n"
         try rule.write(to: sudoersCopy, atomically: true, encoding: .utf8)
 
+        // The app bundle is verified before anything is copied as root, so a
+        // modified bundle cannot install a tampered payload.
         let command = """
-        /bin/mkdir -p /usr/local/libexec && \
+        /usr/bin/codesign --verify --strict '\(appPath)' && \
+        /bin/rm -rf '\(payloadPath).new' && \
+        /bin/mkdir -p '\(payloadPath).new' && \
+        /bin/cp -R '\(payloadURL.path)/.' '\(payloadPath).new/' && \
+        /usr/bin/chown -R root:wheel '\(payloadPath).new' && \
+        /bin/chmod -R go-w '\(payloadPath).new' && \
+        /bin/rm -rf '\(payloadPath)' && \
+        /bin/mv '\(payloadPath).new' '\(payloadPath)' && \
         /usr/sbin/visudo -cf '\(sudoersCopy.path)' && \
         /usr/bin/install -o root -g wheel -m 0755 '\(helperCopy.path)' '\(path)' && \
         /usr/bin/install -o root -g wheel -m 0440 '\(sudoersCopy.path)' '\(sudoersPath)'
@@ -83,18 +125,25 @@ enum Helper {
         guard result.status == 0 else {
             throw InstallError.failed(result.error.isEmpty ? "Installation cancelled." : result.error)
         }
-
-        guard let installed = try? String(contentsOfFile: path, encoding: .utf8), installed == source else {
-            throw InstallError.failed("The helper was installed but its contents do not match. Aborting.")
-        }
     }
 
     static func uninstall() throws {
-        let command = "/bin/rm -f '\(sudoersPath)' '\(path)'"
+        let command = """
+        /bin/rm -f '\(sudoersPath)' '\(path)' && \
+        /bin/rm -rf '\(payloadPath)'
+        """
         let result = try runAdmin(command)
         if result.status != 0 {
             throw InstallError.failed(result.error.isEmpty ? "Uninstall failed." : result.error)
         }
+    }
+
+    private static var bundledHelper: String? {
+        guard let url = Bundle.main.url(forResource: "rwth-vpn-helper", withExtension: "sh"),
+              let text = try? String(contentsOf: url, encoding: .utf8),
+              !text.contains("{{HELPER_VERSION}}")
+        else { return nil }
+        return text
     }
 
     // MARK: - Process plumbing
@@ -135,7 +184,6 @@ enum Helper {
             .replacingOccurrences(of: "\"", with: "\\\"")
         let script = "do shell script \"\(escaped)\" with administrator privileges"
         let result = run("/usr/bin/osascript", ["-e", script])
-        // osascript reports failures on stderr with an "execution error:" prefix.
         var message = result.error
         if let range = message.range(of: "execution error: ") {
             message = String(message[range.upperBound...])

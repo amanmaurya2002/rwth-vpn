@@ -4,23 +4,39 @@
 # Installed as root:wheel 0755 at /usr/local/libexec/rwth-vpn-helper and
 # allow-listed in /etc/sudoers.d/rwth-vpn-helper (NOPASSWD) for the local user.
 #
-# It deliberately exposes only two fixed operations and never accepts extra
-# openconnect options, so it cannot be used to run arbitrary commands as root.
+# The openconnect client it runs is a root-owned copy under
+# /usr/local/libexec/rwth-vpn/ that the app installs together with this script.
+# The helper never accepts a path or extra openconnect options, so a modified
+# or replaced .app cannot turn into root code execution.
 #
-#   connect <split|full> <ab123456>   connects (credentials read from stdin)
+#   connect <split|full> <ab123456>   connects (password then token on stdin)
 #   stop                              disconnects the active session
+#   version                           prints helper and payload versions
 set -u
 PATH=/usr/bin:/bin:/usr/sbin:/sbin
-OC=/opt/homebrew/bin/openconnect
+HELPER_VERSION="{{HELPER_VERSION}}"
+PAYLOAD=/usr/local/libexec/rwth-vpn
+OC="$PAYLOAD/openconnect"
+VPNC_SCRIPT="$PAYLOAD/vpnc-script"
+CA_BUNDLE="$PAYLOAD/cert.pem"
 PIDFILE=/var/run/rwth-vpn-helper.pid
 SERVER=vpn.rwth-aachen.de
 
-die() { echo "$*" >&2; exit 64; }
-usage() { die "usage: $0 connect <split|full> <ab123456> | stop"; }
+die() { echo "$*" >&2; exit "${2:-64}"; }
+usage() { die "usage: $0 connect <split|full> <ab123456> | stop | version"; }
 
-[ "$(id -u)" -eq 0 ] || die "rwth-vpn-helper must run as root"
+[ "$(id -u)" -eq 0 ] || die "rwth-vpn-helper must run as root" 77
 
 case "${1:-}" in
+version)
+    [ -d "$PAYLOAD" ] || die "openconnect payload missing" 69
+    echo "helper=$HELPER_VERSION"
+    if [ -f "$PAYLOAD/MANIFEST.sha256" ]; then
+        echo "manifest=$(shasum -a 256 "$PAYLOAD/MANIFEST.sha256" | awk '{print $1}')"
+    else
+        echo "manifest="
+    fi
+    ;;
 connect)
     group=${2:-}
     user=${3:-}
@@ -33,16 +49,22 @@ connect)
         [a-z][a-z][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
         *) die "invalid username (expected ab123456)" ;;
     esac
-    [ -x "$OC" ] || die "openconnect is not installed at $OC (run: brew install openconnect)"
+    [ -x "$OC" ] || die "openconnect payload missing; reinstall the helper" 69
+    [ -x "$VPNC_SCRIPT" ] || die "vpnc-script missing; reinstall the helper" 69
+    [ -f "$CA_BUNDLE" ] || die "CA bundle missing; reinstall the helper" 69
 
     # Record our own pid, then become openconnect: same pid, no fork, so the
     # caller's stdin (password, then token code) is passed through untouched.
     # Backgrounding here would redirect stdin to /dev/null and break the login.
     echo "$$" >"$PIDFILE"
-    exec "$OC" --protocol=anyconnect \
-          --user="$user" \
-          --authgroup="$authgroup" \
-          "$SERVER"
+    exec "$OC" \
+        --protocol=anyconnect \
+        --script="$VPNC_SCRIPT" \
+        --no-system-trust \
+        --cafile="$CA_BUNDLE" \
+        --user="$user" \
+        --authgroup="$authgroup" \
+        "$SERVER"
     ;;
 stop)
     [ -f "$PIDFILE" ] || exit 0

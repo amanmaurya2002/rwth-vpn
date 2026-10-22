@@ -9,6 +9,7 @@ enum PreviewRenderer {
     static func render() {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
+        Keychain.isEnabled = false
 
         let directory = CommandLine.arguments.last.flatMap { $0.hasPrefix("/") ? $0 : nil } ?? "/tmp"
         let base = URL(fileURLWithPath: directory)

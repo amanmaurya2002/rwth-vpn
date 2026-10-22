@@ -4,7 +4,12 @@ import Foundation
 enum Keychain {
     private static let service = "dev.local.rwth-vpn"
 
+    /// Tests and previews must never touch the real login keychain (macOS
+    /// would show an access prompt after every rebuild).
+    static var isEnabled = true
+
     static func set(_ value: String, for account: String) {
+        guard isEnabled else { return }
         let base: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -20,6 +25,7 @@ enum Keychain {
     }
 
     static func get(_ account: String) -> String? {
+        guard isEnabled else { return nil }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -36,6 +42,7 @@ enum Keychain {
     }
 
     static func delete(_ account: String) {
+        guard isEnabled else { return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
