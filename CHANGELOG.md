@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Fixed the standalone installer status message on POSIX shells.
+
 ## 1.2.0
 
 - Added a Homebrew-free one-line CLI installer.

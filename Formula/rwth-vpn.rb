@@ -1,9 +1,9 @@
 class RwthVpn < Formula
   desc "Lightweight RWTH Aachen VPN command-line client"
   homepage "https://amanmaurya2002.github.io/rwth-vpn/"
-  url "https://github.com/amanmaurya2002/rwth-vpn/releases/download/v1.2.0/rwth-vpn-cli-1.2.0.tar.gz"
-  sha256 "5029311c7dc74f12794f43d840330db88ec0bf4adee0d77b9dd525b8dce139d8"
-  version "1.2.0"
+  url "https://github.com/amanmaurya2002/rwth-vpn/releases/download/v1.2.1/rwth-vpn-cli-1.2.1.tar.gz"
+  sha256 "d1833a29f6533c3279c946a8fc0aa0596b67466f8a03fb40b0f8f57e995e8f1b"
+  version "1.2.1"
   license "MIT"
 
   def install

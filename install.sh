@@ -26,7 +26,7 @@ version="${tag#v}"
 archive="rwth-vpn-cli-$version.tar.gz"
 base="https://github.com/$REPO/releases/download/$tag"
 
-echo "Downloading rwth-vpn $version…"
+echo "Downloading rwth-vpn ${version}..."
 curl -fsSL -o "$TMP_DIR/$archive" "$base/$archive"
 curl -fsSL -o "$TMP_DIR/SHA256SUMS.txt" "$base/SHA256SUMS.txt"
 expected="$(awk -v name="$archive" '$0 ~ name { print $1; exit }' "$TMP_DIR/SHA256SUMS.txt")"
