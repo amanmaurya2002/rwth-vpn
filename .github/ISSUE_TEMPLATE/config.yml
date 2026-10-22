@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Install help
-    url: https://github.com/amanmaurya2002/rwth-vpn/blob/main/INSTALL.md
-    about: Gatekeeper, helper installation and first-run steps
+    url: https://github.com/amanmaurya2002/rwth-vpn/blob/main/README.md
+    about: CLI installation, configuration and helper setup
   - name: Security issue
     url: https://github.com/amanmaurya2002/rwth-vpn/security/advisories/new
     about: Please report vulnerabilities privately

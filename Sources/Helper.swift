@@ -19,6 +19,13 @@ enum Helper {
         if let path = ProcessInfo.processInfo.environment["RWTH_VPN_RESOURCE_ROOT"] {
             return URL(fileURLWithPath: path, isDirectory: true)
         }
+        if let executable = ProcessInfo.processInfo.arguments.first {
+            let sibling = URL(fileURLWithPath: executable).deletingLastPathComponent()
+                .appendingPathComponent("resources", isDirectory: true)
+            if FileManager.default.fileExists(atPath: sibling.path) {
+                return sibling
+            }
+        }
         return Bundle.main.resourceURL
     }
 

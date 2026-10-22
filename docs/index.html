@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RWTH VPN — simple CLI for RWTH Aachen</title>
-<meta name="description" content="Unofficial RWTH Aachen VPN CLI for Apple Silicon Macs, with an experimental native desktop app.">
+<meta name="description" content="Unofficial RWTH Aachen VPN CLI for Apple Silicon Macs.">
 <link rel="icon" href="icon.png">
 <style>
   :root {
@@ -91,17 +91,12 @@
   <p class="tag">A small VPN client for RWTH Aachen.</p>
   <p class="sub">CLI first · Apple Silicon · macOS 26+ · credentials stay in your Keychain.</p>
 
-  <div class="actions">
-    <a class="btn" href="#install">Install CLI</a>
-    <a class="btn secondary" data-repo-link="/blob/main/README.md">Documentation</a>
-    <span class="meta">Free · MIT</span>
-  </div>
+
 
   <p class="meta">Unofficial student project. Not affiliated with RWTH Aachen University or its IT Center. The supported client is Cisco Secure Client.</p>
 
   <section class="install" id="install">
     <h2>Install the CLI</h2>
-    <p>Recommended. No Homebrew and no app download required.</p>
     <div class="command">
       <pre id="install-command"><code>curl -fsSL https://raw.githubusercontent.com/amanmaurya2002/rwth-vpn/main/install.sh | bash</code></pre>
       <button class="copy" type="button" data-copy="#install-command" aria-label="Copy install command">Copy</button>
@@ -109,19 +104,9 @@
     <p class="note">Then run <code>rwth-vpn setup</code> and <code>rwth-vpn connect</code>. Setup asks for administrator authorization once to install the VPN helper.</p>
   </section>
 
-  <section class="experimental">
-    <h2>Experimental desktop app</h2>
-    <p class="sub">The native app provides a menu bar interface, but it is not notarized and requires macOS's <strong>Open Anyway</strong> approval.</p>
-    <div class="actions">
-      <a class="btn secondary" data-repo-link="/releases/latest">Download app</a>
-      <a class="meta" data-repo-link="/blob/main/INSTALL.md">Installation guide</a>
-    </div>
-    <img class="shot" src="preview-main.png" alt="The experimental RWTH VPN desktop app.">
-  </section>
-
   <h2>CLI basics</h2>
   <ul>
-    <li>Configure credentials in the desktop app first; the CLI uses the same Keychain entries.</li>
+    <li>Run <code>rwth-vpn configure</code> to save credentials securely in the Keychain.</li>
     <li><code>rwth-vpn status</code> shows helper and tunnel state.</li>
     <li><code>rwth-vpn uninstall</code> removes the CLI and helper; add <code>--purge</code> to remove credentials too.</li>
   </ul>
@@ -131,7 +116,7 @@
 
   <footer>
     <a data-repo-link="">Source</a> ·
-    <a data-repo-link="/blob/main/INSTALL.md">Install</a> ·
+    <a data-repo-link="/blob/main/README.md">Install</a> ·
     <a data-repo-link="/blob/main/docs/FAQ.md">FAQ</a> ·
     <a data-repo-link="/issues">Issues</a> ·
     <a data-repo-link="/blob/main/LICENSE">MIT</a>

@@ -2,6 +2,7 @@ import Foundation
 
 /// Single place for versions, links and product strings.
 enum AppInfo {
+    static let cliVersion = "1.2.6"
     static let name = "RWTH VPN"
     static let repository = "https://github.com/amanmaurya2002/rwth-vpn"
     static let releases = repository + "/releases/latest"
@@ -23,6 +24,9 @@ enum AppInfo {
         if let root = ProcessInfo.processInfo.environment["RWTH_VPN_RESOURCE_ROOT"] {
             url = URL(fileURLWithPath: root, isDirectory: true)
                 .appendingPathComponent("helper-version.txt")
+        } else if let executable = ProcessInfo.processInfo.arguments.first {
+            url = URL(fileURLWithPath: executable).deletingLastPathComponent()
+                .appendingPathComponent("resources/helper-version.txt")
         } else {
             url = Bundle.main.url(forResource: "helper-version", withExtension: "txt")
         }

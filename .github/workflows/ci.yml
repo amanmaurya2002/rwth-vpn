@@ -17,15 +17,19 @@ jobs:
       - name: Build
         run: ./build.sh
 
-      - name: Self test
-        run: '"dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --selftest'
+      - name: CLI smoke test
+        run: |
+          ./dist/rwth-vpn help
+          ./dist/rwth-vpn status
 
       - name: Bundled client smoke test
         run: ./scripts/test-bundled.sh
 
-      - name: Upload app
+      - name: Upload CLI
         uses: actions/upload-artifact@v4
         with:
-          name: RWTH-VPN-app
-          path: dist/RWTH VPN.app
+          name: RWTH-VPN-cli
+          path: |
+            dist/rwth-vpn
+            dist/resources
           if-no-files-found: error

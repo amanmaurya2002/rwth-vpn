@@ -1,18 +1,17 @@
 name: Bug report
-description: Something does not work (connection, install, UI)
+description: Something does not work (connection or install)
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
         **Do not paste credentials, tokens, or the contents of your Keychain.**
-        Remove your username if you prefer. The Log panel (Settings → Copy)
-        contains no secrets and is safe to attach.
+        Remove your username if you prefer. Do not include passwords or tokens.
   - type: input
     id: version
     attributes:
-      label: App version
-      description: Settings → footer, e.g. v1.0.0
+      label: CLI version
+      description: Run `rwth-vpn --help` or check the latest release, e.g. v1.2.5
     validations:
       required: true
   - type: input
@@ -27,9 +26,9 @@ body:
     attributes:
       label: What did you do?
       placeholder: |
-        1. Installed from DMG
-        2. Clicked Install helper
-        3. Clicked Connect
+        1. Installed with the curl installer
+        2. Ran `rwth-vpn setup`
+        3. Ran `rwth-vpn connect`
     validations:
       required: true
   - type: textarea
@@ -41,8 +40,8 @@ body:
   - type: textarea
     id: log
     attributes:
-      label: Log
-      description: Open the Log panel, click Copy, paste here.
+      label: Command output
+      description: Paste the relevant terminal output without credentials.
       render: text
   - type: checkboxes
     id: checks
