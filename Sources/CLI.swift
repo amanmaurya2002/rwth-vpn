@@ -27,6 +27,11 @@ enum RWTHVPNCLI {
             try Helper.install()
             Terminal.success("Helper installed.")
             Terminal.muted("You can now run: rwth-vpn connect")
+        case "configure":
+            guard arguments.dropFirst().isEmpty else {
+                throw CLIError.message("Usage: rwth-vpn configure")
+            }
+            try configure()
         case "remove":
             guard arguments.dropFirst().isEmpty else {
                 throw CLIError.message("Usage: rwth-vpn remove")
@@ -121,6 +126,7 @@ enum RWTHVPNCLI {
 
         Commands:
           setup       Install or update the privileged helper
+          configure   Save username, VPN password, and optional TOTP secret
           remove      Remove the helper; keep the CLI
           status      Show helper and tunnel status
           connect     Connect using credentials shared with the app
@@ -134,6 +140,43 @@ enum RWTHVPNCLI {
           rwth-vpn status
           rwth-vpn uninstall
         """)
+    }
+
+    private static func configure() throws {
+        guard Terminal.isInteractive else {
+            throw CLIError.message("Configuration requires an interactive terminal.")
+        }
+        print("Configure RWTH VPN")
+        print(Terminal.dim("----------------------------------------"))
+        print("Username: ", terminator: "")
+        guard let rawUsername = readLine(),
+              let username = VPNCore.validateUsername(rawUsername)
+        else {
+            throw CLIError.message("Username must look like ab123456.")
+        }
+        guard let password = readSecret("VPN password: "), !password.isEmpty else {
+            throw CLIError.message("VPN password cannot be empty.")
+        }
+        print("TOTP secret (optional, Base32 or otpauth://): ", terminator: "")
+        let secret = readLine() ?? ""
+        if !secret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           VPNCore.currentCode(secret: secret) == nil {
+            throw CLIError.message("The TOTP secret is not valid.")
+        }
+        VPNCore.saveCredentials(username: username, password: password, secret: secret)
+        Terminal.success("Credentials saved to the login Keychain.")
+    }
+
+    private static func readSecret(_ prompt: String) -> String? {
+        var buffer = [CChar](repeating: 0, count: 1024)
+        return buffer.withUnsafeMutableBufferPointer { pointer in
+            prompt.withCString { promptPointer in
+                guard let result = readpassphrase(promptPointer, pointer.baseAddress, pointer.count, 0) else {
+                    return nil
+                }
+                return String(cString: result)
+            }
+        }
     }
 
     private static func update(_ arguments: ArraySlice<String>) throws {

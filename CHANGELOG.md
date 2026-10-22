@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.6
+
+- Removed the unsupported desktop app and its app-only packaging, signing, and
+  documentation.
+- Made the standalone `rwth-vpn` CLI the only supported product and added
+  interactive credential configuration.
+
 ## 1.2.5
 
 - Fixed CLI helper readiness checks for standalone installations.

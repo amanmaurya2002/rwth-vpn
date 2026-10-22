@@ -9,9 +9,9 @@
 ## Checklist
 
 - [ ] `./build.sh` succeeds
-- [ ] `--selftest` passes
+- [ ] `./dist/rwth-vpn help` and `./dist/rwth-vpn status` pass
 - [ ] `./scripts/test-bundled.sh` passes (if the payload changed)
 - [ ] `CHANGELOG.md` updated for user-visible changes
 - [ ] `Resources/helper-version.txt` bumped if the helper CLI or payload changed
 - [ ] No credentials, tokens or personal data in the diff
-- [ ] UI changes: screenshots attached (`--render-preview`)
+- [ ] CLI output or interaction changes tested in a terminal
