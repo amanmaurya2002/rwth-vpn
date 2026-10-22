@@ -2,7 +2,7 @@
 
 A small, unofficial command-line VPN client for RWTH Aachen. It stores
 credentials in the macOS Keychain, generates TOTP codes locally, and uses a
-small privileged helper to run the bundled OpenConnect client.
+small privileged VPN service to run the bundled OpenConnect client.
 
 The CLI is the only supported product. There is no desktop app or Homebrew
 runtime dependency.
@@ -34,13 +34,18 @@ Configure your RWTH username, VPN password, and TOTP secret interactively:
 
 ```bash
 rwth-vpn configure
-rwth-vpn setup
 rwth-vpn connect
 ```
 
-`setup` asks for administrator authorization once to install or update the VPN
-helper. The default tunnel is split tunnel. Use `rwth-vpn connect full` for a
-full tunnel.
+Run `rwth-vpn` without a command to open the interactive dashboard. It shows
+the current VPN service, tunnel, and account state and lets you connect,
+disconnect, configure credentials, or check for updates from a numbered menu.
+The first connection automatically prepares the VPN service and macOS asks for
+administrator authorization once if needed.
+
+The default tunnel is split tunnel. Use `rwth-vpn connect full` for a full
+tunnel. The `setup` command remains available for repairing the VPN service,
+but is not required during normal use.
 
 Useful commands:
 
@@ -54,8 +59,8 @@ rwth-vpn uninstall
 rwth-vpn uninstall --purge
 ```
 
-`remove` removes only the helper and keeps the CLI. `uninstall` removes the
-CLI and helper after confirmation but keeps credentials by default.
+`remove` removes only the VPN service and keeps the CLI. `uninstall` removes
+the CLI and VPN service after confirmation but keeps credentials by default.
 Add `--purge` to `uninstall` if you also want to delete the saved Keychain
 credentials.
 
