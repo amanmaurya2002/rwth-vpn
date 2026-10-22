@@ -15,7 +15,11 @@ enum RWTHVPNCLI {
 
     private static func run(_ arguments: [String]) throws {
         guard let command = arguments.first else {
-            printUsage()
+            if Terminal.isInteractive {
+                try interactiveMenu()
+            } else {
+                printUsage()
+            }
             return
         }
 
@@ -25,8 +29,7 @@ enum RWTHVPNCLI {
                 throw CLIError.message("Usage: rwth-vpn setup")
             }
             try Helper.install()
-            Terminal.success("Helper installed.")
-            Terminal.muted("You can now run: rwth-vpn connect")
+            Terminal.success("VPN service is ready.")
         case "configure":
             guard arguments.dropFirst().isEmpty else {
                 throw CLIError.message("Usage: rwth-vpn configure")
@@ -43,13 +46,7 @@ enum RWTHVPNCLI {
             guard arguments.dropFirst().isEmpty else {
                 throw CLIError.message("Usage: rwth-vpn status")
             }
-            Terminal.header("RWTH VPN")
-            Terminal.row("Helper", Helper.statusDescription, tone: Helper.status == .ready ? .success : .warning)
-            if let pid = Helper.connectionPID() {
-                Terminal.row("Tunnel", "active (pid \(pid))", tone: .success)
-            } else {
-                Terminal.row("Tunnel", "inactive", tone: .muted)
-            }
+            showStatus()
         case "disconnect":
             guard arguments.dropFirst().isEmpty else {
                 throw CLIError.message("Usage: rwth-vpn disconnect")
@@ -75,14 +72,11 @@ enum RWTHVPNCLI {
         guard values.count <= 1 else {
             throw CLIError.message("Usage: rwth-vpn connect [split|full]")
         }
+
         let group = values.first ?? "split"
         guard group == "split" || group == "full" else {
             throw CLIError.message("Tunnel must be 'split' or 'full'.")
         }
-        guard Helper.status == .ready else {
-            throw CLIError.message("Helper is not ready. Run 'rwth-vpn setup'.")
-        }
-
         let username = VPNCore.loadUsername()
         guard let user = VPNCore.validateUsername(username) else {
             throw CLIError.message("No valid username found. Run 'rwth-vpn configure' first.")
@@ -95,6 +89,7 @@ enum RWTHVPNCLI {
             throw CLIError.message("No TOTP code available. Run 'rwth-vpn configure' with your token secret first.")
         }
 
+        try ensureServiceReady()
         let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "connect", group, user],
                                 input: "\(password)\n\(code)\n")
         if result.status != 0 {
@@ -106,6 +101,98 @@ enum RWTHVPNCLI {
         }
     }
 
+    private static func interactiveMenu() throws {
+        while true {
+            Terminal.clear()
+            Terminal.banner()
+            showStatus(compact: true)
+            print()
+            print(Terminal.bold("What would you like to do?"))
+            print("  \(Terminal.accent("1"))  Connect (split tunnel)")
+            print("  \(Terminal.accent("2"))  Connect (full tunnel)")
+            print("  \(Terminal.accent("3"))  Disconnect")
+            print("  \(Terminal.accent("4"))  Configure credentials")
+            print("  \(Terminal.accent("5"))  Check for updates")
+            print("  \(Terminal.accent("6"))  Uninstall")
+            print("  \(Terminal.accent("q"))  Quit")
+            print()
+            print("\(Terminal.accent("›")) Choose an option: ", terminator: "")
+
+            switch (readLine() ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+            case "1":
+                performInteractive("Connecting with split tunnel") { try connect(["split"][...]) }
+            case "2":
+                performInteractive("Connecting with full tunnel") { try connect(["full"][...]) }
+            case "3":
+                performInteractive("Disconnecting") { try run(["disconnect"]) }
+            case "4":
+                performInteractive("Configuring credentials") { try run(["configure"]) }
+            case "5":
+                performInteractive("Checking for updates") { try run(["update", "--check"]) }
+            case "6":
+                performInteractive("Uninstalling RWTH VPN") { try run(["uninstall"]) }
+            case "q", "quit", "exit":
+                print()
+                Terminal.muted("Goodbye.")
+                return
+            default:
+                Terminal.warning("Please choose one of the options above.")
+                pause()
+            }
+        }
+    }
+
+    private static func performInteractive(_ title: String, action: () throws -> Void) {
+        print()
+        Terminal.spinner(title, action: action)
+        pause()
+    }
+
+    private static func pause() {
+        print()
+        print(Terminal.dim("Press Return to continue…"), terminator: "")
+        _ = readLine()
+    }
+
+    private static func showStatus(compact: Bool = false) {
+        if !compact {
+            Terminal.header("RWTH VPN")
+        } else {
+            print(Terminal.dim("────────────────────────────────────────"))
+        }
+        switch Helper.status {
+        case .ready:
+            Terminal.row("Service", "ready", tone: .success)
+        case .missing:
+            Terminal.row("Service", "needs setup", tone: .warning)
+        case .outdated:
+            Terminal.row("Service", "needs update", tone: .warning)
+        }
+        if let pid = Helper.connectionPID() {
+            Terminal.row("Tunnel", "active (pid \(pid))", tone: .success)
+        } else {
+            Terminal.row("Tunnel", "inactive", tone: .muted)
+        }
+        let username = VPNCore.loadUsername()
+        Terminal.row("Account", username.isEmpty ? "not configured" : "configured", tone: username.isEmpty ? .warning : .success)
+    }
+
+    private static func ensureServiceReady() throws {
+        guard Helper.status != .ready else { return }
+
+        Terminal.muted("Preparing the VPN service. macOS may ask for administrator authorization once.")
+        do {
+            try Helper.install()
+        } catch {
+            throw CLIError.message("Could not prepare the VPN service: \(error.localizedDescription)")
+        }
+
+        guard Helper.status == .ready else {
+            throw CLIError.message("The VPN service was installed but is not ready. Try connecting again.")
+        }
+        Terminal.success("VPN service ready.")
+    }
+
     private static func removeHelper() throws {
         if Helper.connectionPID() != nil {
             let result = Helper.run("/usr/bin/sudo", ["-n", Helper.path, "stop"])
@@ -114,7 +201,7 @@ enum RWTHVPNCLI {
             }
         }
         try Helper.uninstall()
-        Terminal.success("Helper removed.")
+        Terminal.success("VPN service removed.")
         Terminal.muted("The CLI remains installed.")
     }
 
@@ -125,14 +212,14 @@ enum RWTHVPNCLI {
         \(Terminal.bold("Usage:")) rwth-vpn <command>
 
         Commands:
-          setup       Install or update the privileged helper
+          setup       Repair the VPN service (normally automatic)
           configure   Save username, VPN password, and optional TOTP secret
-          remove      Remove the helper; keep the CLI
-          status      Show helper and tunnel status
+          remove      Remove the VPN service; keep the CLI
+          status      Show VPN service and tunnel status
           connect     Connect using credentials shared with the app
           disconnect  Disconnect the active tunnel
           update      Check for and install the latest CLI release
-          uninstall   Remove the CLI and helper
+          uninstall   Remove the CLI and VPN service
 
         Examples:
           rwth-vpn setup
@@ -350,8 +437,8 @@ enum RWTHVPNCLI {
 
         if !yes {
             let scope = purge
-                ? "the CLI, VPN helper, and saved credentials"
-                : "the CLI and VPN helper (credentials will be kept)"
+                ? "the CLI, VPN service, and saved credentials"
+                : "the CLI and VPN service (credentials will be kept)"
             guard confirm("Uninstall \(scope)?") else {
                 Terminal.muted("Cancelled.")
                 return
@@ -373,8 +460,8 @@ enum RWTHVPNCLI {
         }
 
         guard let root = ProcessInfo.processInfo.environment["RWTH_VPN_INSTALL_ROOT"] else {
-            Terminal.success(purge ? "Helper removed and credentials purged."
-                                    : "Helper removed. Credentials were kept.")
+            Terminal.success(purge ? "VPN service removed and credentials purged."
+                                    : "VPN service removed. Credentials were kept.")
             return
         }
 
@@ -387,8 +474,8 @@ enum RWTHVPNCLI {
         process.arguments = ["-c", script]
         try process.run()
         Terminal.success("Uninstall scheduled.")
-        Terminal.muted(purge ? "CLI, helper, and credentials will be removed."
-                              : "CLI and helper will be removed. Credentials were kept.")
+        Terminal.muted(purge ? "CLI, VPN service, and credentials will be removed."
+                              : "CLI and VPN service will be removed. Credentials will be kept.")
     }
 
     private static func confirm(_ prompt: String) -> Bool {
@@ -429,8 +516,29 @@ enum RWTHVPNCLI {
         }
 
         static func success(_ text: String) { print("\(green("OK")) \(text)") }
+        static func warning(_ text: String) { print("\(yellow(warningSymbol)) \(text)") }
         static func error(_ text: String) { fputs("\(red("ERR")) rwth-vpn: \(text)\n", stderr) }
         static func muted(_ text: String) { print(dim(text)) }
+        static func accent(_ text: String) -> String { bold(text) }
+        static func clear() {
+            guard colors else { return }
+            print("\u{001B}[2J\u{001B}[H", terminator: "")
+        }
+        static func banner() {
+            print()
+            print(bold("╭────────────────────────────────────────╮"))
+            print(bold("│              RWTH VPN                  │"))
+            print(bold("│       Secure campus connectivity       │"))
+            print(bold("╰────────────────────────────────────────╯"))
+        }
+        static func spinner(_ title: String, action: () throws -> Void) {
+            print("\(accent("•")) \(title)…")
+            do {
+                try action()
+            } catch {
+                Terminal.error(error.localizedDescription)
+            }
+        }
         static func paint(_ text: String, _ tone: Tone) -> String {
             switch tone {
             case .success: return green(text)
