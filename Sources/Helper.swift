@@ -113,7 +113,7 @@ enum Helper {
         /bin/rm -rf '\(payloadPath).new' && \
         /bin/mkdir -p '\(payloadPath).new' && \
         /bin/cp -R '\(payloadURL.path)/.' '\(payloadPath).new/' && \
-        /usr/bin/chown -R root:wheel '\(payloadPath).new' && \
+        /usr/sbin/chown -R root:wheel '\(payloadPath).new' && \
         /bin/chmod -R go-w '\(payloadPath).new' && \
         /bin/rm -rf '\(payloadPath)' && \
         /bin/mv '\(payloadPath).new' '\(payloadPath)' && \
