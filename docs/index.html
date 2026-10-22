@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RWTH VPN — a tiny macOS client</title>
+<meta name="description" content="Unofficial native VPN client for RWTH Aachen. Apple Silicon, Keychain storage, one-click connect. No Cisco client, no Terminal.">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --bg: #fbfbfd; --fg: #111318; --muted: #6b7280; --accent: #0057a8;
+    --card: #ffffff; --line: #e4e7ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --fg: #f2f4f7; --muted: #98a2b3; --accent: #6cb2ea;
+            --card: #171a20; --line: #272c35; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 700px; margin: 0 auto; padding: 64px 24px 72px; }
+  header { display: flex; align-items: center; gap: 14px; }
+  header img { width: 54px; height: 54px; border-radius: 12px; }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+  .tag { font-size: 19px; margin: 16px 0 2px; }
+  .sub { margin: 0; color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 28px 0 10px; }
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    padding: 11px 20px; border-radius: 9px; font-weight: 600; font-size: 15px;
+  }
+  .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .meta { color: var(--muted); font-size: 13px; }
+  .shot {
+    display: block; width: 100%; max-width: 400px; margin: 36px auto 0;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+  }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em;
+    color: var(--muted); margin: 46px 0 10px;
+  }
+  ol, ul { padding-left: 20px; margin: 0; }
+  li { margin: 7px 0; }
+  .note {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 13px 15px; margin: 16px 0 0; font-size: 14px; color: var(--muted);
+  }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  footer a { color: inherit; }
+  a { color: var(--accent); }
+  code { font-size: 13px; background: var(--card); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.png" alt="">
+    <h1>RWTH VPN</h1>
+  </header>
+
+  <p class="tag">A tiny native VPN client for RWTH Aachen.</p>
+  <p class="sub">Apple Silicon · macOS 14+ · password and token stay in your Keychain.</p>
+
+  <div class="actions">
+    <a class="btn" data-repo-link="/releases/latest">Download</a>
+    <a class="btn secondary" data-repo-link="/blob/main/INSTALL.md">Install guide</a>
+    <span class="meta">Free · MIT · 5 MB</span>
+  </div>
+
+  <p class="meta">Unofficial student project. Not affiliated with RWTH Aachen University or its IT Center. The supported client is Cisco Secure Client.</p>
+
+  <img class="shot" src="preview-main.png" alt="The RWTH VPN window: status, connect button and tunnel picker.">
+
+  <h2>Install</h2>
+  <ol>
+    <li>Download the DMG and drag <strong>RWTH VPN</strong> into Applications.</li>
+    <li>Open it once. macOS blocks it, because the app is not notarized.</li>
+    <li>Go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</li>
+  </ol>
+  <p class="note">macOS 15 removed the old “right-click → Open” shortcut. The <a data-repo-link="/blob/main/INSTALL.md">install guide</a> shows the exact dialogs. On macOS 14, right-click → Open still works.</p>
+
+  <h2>First run</h2>
+  <ul>
+    <li>Settings → username, VPN password, token secret (optional — otherwise type the code there before connecting).</li>
+    <li>Click <strong>Install…</strong> once. A small root-owned helper is installed; after that, connecting never asks for an admin password.</li>
+    <li>Connect. A shield appears in the menu bar while the tunnel is up.</li>
+  </ul>
+
+  <h2>Why</h2>
+  <p>The official client is heavy and keeps asking for credentials and codes. This one keeps them in the Keychain, generates the TOTP code, and connects with one click. Split tunnel by default, so your local network keeps working.</p>
+
+  <footer>
+    <a data-repo-link="">Source</a> ·
+    <a data-repo-link="/blob/main/INSTALL.md">Install</a> ·
+    <a data-repo-link="/blob/main/docs/FAQ.md">FAQ</a> ·
+    <a data-repo-link="/issues">Issues</a> ·
+    <a data-repo-link="/blob/main/LICENSE">MIT</a>
+  </footer>
+</main>
+
+<script>
+  // Derive the repository from the Pages URL so no owner needs to be hardcoded.
+  (function () {
+    var host = location.hostname;
+    var owner = host.slice(-10) === 'github.io' ? host.split('.')[0] : 'OWNER';
+    var repo = location.pathname.split('/').filter(Boolean)[0] || 'rwth-vpn';
+    var base = 'https://github.com/' + owner + '/' + repo;
+    document.querySelectorAll('[data-repo-link]').forEach(function (link) {
+      link.href = base + link.getAttribute('data-repo-link');
+    });
+  })();
+</script>
+</body>
+</html>

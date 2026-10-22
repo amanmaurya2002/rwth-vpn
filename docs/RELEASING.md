@@ -22,6 +22,23 @@
 3. Replace `OWNER` in `Sources/AppInfo.swift` with the GitHub owner.
 4. Enable GitHub Actions and (optionally) branch protection on `main`.
 
+## Website (GitHub Pages)
+
+The landing page is `docs/index.html` (no build step, no Jekyll — `docs/.nojekyll`
+is present). Enable it once:
+
+1. Repository **Settings → Pages**.
+2. **Source:** *Deploy from a branch*.
+3. **Branch:** `main`, **folder:** `/docs`, then **Save**.
+
+It is served at `https://<owner>.github.io/<repo>/`. The page derives the
+repository from the URL, so Download/Install/Issues links work without editing
+`OWNER` anywhere. Update screenshots with:
+
+```bash
+"dist/RWTH VPN.app/Contents/MacOS/RWTHVPN" --render-preview docs/
+```
+
 ## Every release
 
 1. Bump the version in `Resources/Info.plist` (`CFBundleShortVersionString`,
